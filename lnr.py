@@ -612,7 +612,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
         ylo = numpy.min(err, axis=0)
         yhi = numpy.max(err, axis=0)
         ax.fill_between(t, ylo, yhi, color=color, alpha=alpha, lw=0,
-                        edgecolor='none', zorder=-100)
+                        edgecolor='none')
     if s:
         if log:
             ax.plot(t, (1+s)*y(a,b), ls='--', color=color, lw=lw)
