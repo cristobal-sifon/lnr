@@ -320,8 +320,8 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     return numpy.sqrt(s0)
 
 def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
-          miniter=5000, maxiter=1e5, metro=True,
-          silent=True):
+          miniter=5000, maxiter=1e5, metro=True, silent=True,
+          full_output=False):
     """
     Python wrapper for the linear regression MCMC of Kelly (2007).
     Requires pidly (http://astronomy.sussex.ac.uk/~anthonys/pidly/) and
