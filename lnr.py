@@ -361,17 +361,17 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
     idl = pidly.IDL()
-    idl('x1 = %s' %list(x1))
-    idl('x2 = %s' %list(x2))
+    idl('x1', x1)
+    idl('x2', x2)
     cmd = 'linmix_err, x1, x2, fit'
     if len(x1err) == n:
-        idl('x1err = %s' %list(x1err))
+        idl('x1err', x1err)
         cmd += ', xsig=x1err'
     if len(x2err) == n:
-        idl('x2err = %s' %list(x2err))
+        idl('x2err', x2err)
         cmd += ', ysig=x2err'
     if len(cerr) == n:
-        idl('cerr = %s' %list(cerr))
+        idl('cerr', cerr)
         cmd += ', xycov=cerr'
     cmd += ', miniter=%d, maxiter=%d' %(miniter, maxiter)
     if metro:
@@ -563,7 +563,8 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
     #chi2 = (((x2 - f(*out[:2])) / x2err)**2).sum()
     #dof = len(x1) - 3 - 1
     #print 'chi2/dof = %.2f/%d = %.2f' %(chi2, dof, chi2/dof)
-    return out, out_err
+    out = numpy.transpose([out, out_err])
+    return out
 
 def to_log(x1, x2, x1err=[], x2err=[]):
     """
