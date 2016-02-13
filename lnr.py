@@ -76,7 +76,7 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
 
     """
 
-    def _bess_bootstrap(npts, x1, x2, x1err, x2err, cerr,nsim):
+    def _bess_bootstrap(npts, x1, x2, x1err, x2err, cerr, nsim):
         ##added by Gerrit, July 2014
         ##Unfortunately I needed a copy of the _bess function for bootstrapping.
         #Would be nicer if those two could be combined
