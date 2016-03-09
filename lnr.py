@@ -523,9 +523,9 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
     if x2.size != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
-        x1err = numpy.ones(n)
+        x1err = numpy.zeros(n)
     if len(x2err) == 0:
-        x2err = numpy.ones(n)
+        x2err = numpy.zeros(n)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
 
@@ -547,11 +547,11 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
             return norm + (2*log(wi) + ((y - f(x, *p[:2])) / wi)**2).sum()
         po = po[:2]
 
-    out = fmin(_loglike, po, args=(x1,x2,x1err,x2err),
+    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err),
                disp=verbose, full_output=full_output)
     # bootstrap errors?
     if bootstrap is False:
-        return out
+        return fit
     #def _loglike(p, x, y):
         #return norm + (2*log(p[2]) + ((y - f(x, *p[:2])) / p[2])**2).sum()
     jboot = numpy.random.randint(0, n, (bootstrap,n))
@@ -563,7 +563,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
     #chi2 = (((x2 - f(*out[:2])) / x2err)**2).sum()
     #dof = len(x1) - 3 - 1
     #print 'chi2/dof = %.2f/%d = %.2f' %(chi2, dof, chi2/dof)
-    out = numpy.transpose([out, out_err])
+    out = numpy.transpose([fit, out_err])
     return out
 
 def to_log(x1, x2, x1err=[], x2err=[]):
