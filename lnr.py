@@ -523,9 +523,9 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
     if x2.size != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
-        x1err = numpy.zeros(n)
+        x1err = 1e-8 * numpy.absolute(x1.min()) * numpy.ones(n)
     if len(x2err) == 0:
-        x2err = numpy.zeros(n)
+        x2err = 1e-8 * numpy.absolute(x2.min()) * numpy.ones(n)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
 
