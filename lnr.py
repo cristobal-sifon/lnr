@@ -85,17 +85,17 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         OLS(Y|X), OLS(X|Y), bisector, orthogonal
         """
         #calculate sigma's for datapoints using length of confidence intervals
-        sig11var = np.sum(x1err ** 2,axis=1,keepdims=True) / npts
-        sig22var = np.sum(x2err ** 2,axis=1,keepdims=True) / npts
-        sig12var = np.sum(cerr,axis=1,keepdims=True) / npts
+        sig11var = numpy.sum(x1err ** 2,axis=1,keepdims=True) / npts
+        sig22var = numpy.sum(x2err ** 2,axis=1,keepdims=True) / npts
+        sig12var = numpy.sum(cerr,axis=1,keepdims=True) / npts
 
         # calculate means and variances
-        x1av = np.mean(x1,axis=1,keepdims=True)
+        x1av = numpy.mean(x1,axis=1,keepdims=True)
         x1var = x1.var(axis=1,keepdims=True)
-        x2av = np.mean(x2,axis=1,keepdims=True)
+        x2av = numpy.mean(x2,axis=1,keepdims=True)
         x2var = x2.var(axis=1,keepdims=True)
-        covar_x1x2 = np.mean((x1-np.mean(x1,axis=1,keepdims=True)) * \
-                             (x2-np.mean(x2,axis=1,keepdims=True)),
+        covar_x1x2 = numpy.mean((x1-numpy.mean(x1,axis=1,keepdims=True)) * \
+                             (x2-numpy.mean(x2,axis=1,keepdims=True)),
                              axis=1,keepdims=True)
 
         # compute the regression slopes for OLS(X2|X1), OLS(X1|X2),
@@ -104,14 +104,15 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
             modelint = 1
         else:
             modelint = 4
-        b = np.zeros((modelint,nsim))
+        b = numpy.zeros((modelint,nsim))
         b[0] = ((covar_x1x2 - sig12var) / (x1var - sig11var)).flatten()
         if model != 'yx':
             b[1] = ((x2var - sig22var) / (covar_x1x2 - sig12var)).flatten()
-            b[2] = ((b[0] * b[1] - 1 + np.sqrt((1 + b[0] ** 2) * \
+            b[2] = ((b[0] * b[1] - 1 + numpy.sqrt((1 + b[0] ** 2) * \
                    (1 + b[1] ** 2))) / (b[0] + b[1])).flatten()
-            b[3] = 0.5 * ((b[1] - 1 / b[0]) + np.sign(covar_x1x2).flatten()* \
-                   np.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
+            b[3] = 0.5 * ((b[1] - 1 / b[0]) + numpy.sign(covar_x1x2).flatten()*
+\
+                   numpy.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
 
         # compute intercepts for above 4 cases:
         a = x2av.flatten() - b * x1av.flatten()
@@ -131,19 +132,19 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
                        xi[1] * (1 + b[0].reshape(nsim,1) ** 2)) / \
                       ((b[0].reshape(nsim,1) + \
                        b[1].reshape(nsim,1)) * \
-                       np.sqrt((1 + b[0].reshape(nsim,1) ** 2) * \
+                       numpy.sqrt((1 + b[0].reshape(nsim,1) ** 2) * \
                                (1 + b[1].reshape(nsim,1) ** 2))))
             xi.append((xi[0] / b[0].reshape(nsim,1) ** 2 + xi[1]) * \
                       b[3].reshape(nsim,1) / \
-                      np.sqrt(4 + (b[1].reshape(nsim,1) - \
+                      numpy.sqrt(4 + (b[1].reshape(nsim,1) - \
                               1 / b[0].reshape(nsim,1)) ** 2))
         zeta = []
         for i in xrange(modelint):
             zeta.append(x2 - b[i].reshape(nsim,1) * x1 - x1av * xi[i])
 
         # calculate  variance for all a and b
-        bvar = np.zeros((4,nsim))
-        avar = np.zeros((4,nsim))
+        bvar = numpy.zeros((4,nsim))
+        avar = numpy.zeros((4,nsim))
         for i in xrange(modelint):
             bvar[i] = xi[i].var(axis=1,keepdims=False)/ npts
             avar[i] = zeta[i].var(axis=1,keepdims=False) / npts
