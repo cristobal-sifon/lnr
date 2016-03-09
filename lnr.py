@@ -387,7 +387,7 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     out = [(numpy.median(i), numpy.std(i)) for i in (alpha, beta, sigma)]
     return out
 
-def mcmc(x1, x2, x1err=[], x2err=[], po=(1,1,0.5), logify=True,
+def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
          nsteps=5000, nwalkers=100, nburn=500, output='full'):
     """
     Use emcee to find the best-fit linear relation or power law
@@ -475,7 +475,7 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1,1,0.5), logify=True,
             exit()
     return
 
-def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1,0,0.1),
+def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
         bootstrap=1000, verbose=False, logify=True, full_output=False):
     """
     Maximum Likelihood Estimation of best-fit parameters
