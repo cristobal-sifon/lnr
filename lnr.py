@@ -524,9 +524,9 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     if x2.size != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
-        x1err = 1e-8 * numpy.absolute(x1.min()) * numpy.ones(n)
+        x1err = 1e-5 * numpy.absolute(x1.min()) * numpy.ones(n)
     if len(x2err) == 0:
-        x2err = 1e-8 * numpy.absolute(x2.min()) * numpy.ones(n)
+        x2err = 1e-5 * numpy.absolute(x2.min()) * numpy.ones(n)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
 
@@ -588,8 +588,9 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
          log=False, color='b', lw=2, alpha=0.5, **kwargs):
     """
     alpha is used to shade the uncertainties from a_err and b_err
-
     **kwargs is passed to pylab.plot() for the central line only
+
+    the error band has zorder=-10
 
     """
     if log:
@@ -614,7 +615,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
         ylo = numpy.min(err, axis=0)
         yhi = numpy.max(err, axis=0)
         ax.fill_between(t, ylo, yhi, color=color, alpha=alpha, lw=0,
-                        edgecolor='none')
+                        edgecolor='none', zorder=-10)
     if s:
         if log:
             ax.plot(t, (1+s)*y(a,b), ls='--', color=color, lw=lw)
