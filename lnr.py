@@ -588,8 +588,8 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
          log=False, color='b', lw=2, alpha=0.5, **kwargs):
     """
     alpha is used to shade the uncertainties from a_err and b_err
-
     **kwargs is passed to plt.plot() for the central line only
+    the error band has zorder=-10
 
     """
     if log:
@@ -614,7 +614,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
         ylo = np.min(err, axis=0)
         yhi = np.max(err, axis=0)
         ax.fill_between(t, ylo, yhi, color=color, alpha=alpha, lw=0,
-                        edgecolor='none')
+                        edgecolor='none', zorder=-10)
     if s:
         if log:
             ax.plot(t, (1+s)*y(a,b), ls='--', color=color, lw=lw)
