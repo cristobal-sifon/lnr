@@ -5,10 +5,10 @@
 Various linear regression techniques
 
 """
-import numpy
-import pylab
+import numpy as np
 import stattools
 from itertools import izip
+from matplotlib import pyplot as plt
 from scipy import optimize
 
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
@@ -85,17 +85,17 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         OLS(Y|X), OLS(X|Y), bisector, orthogonal
         """
         #calculate sigma's for datapoints using length of confidence intervals
-        sig11var = numpy.sum(x1err ** 2,axis=1,keepdims=True) / npts
-        sig22var = numpy.sum(x2err ** 2,axis=1,keepdims=True) / npts
-        sig12var = numpy.sum(cerr,axis=1,keepdims=True) / npts
+        sig11var = np.sum(x1err ** 2,axis=1,keepdims=True) / npts
+        sig22var = np.sum(x2err ** 2,axis=1,keepdims=True) / npts
+        sig12var = np.sum(cerr,axis=1,keepdims=True) / npts
 
         # calculate means and variances
-        x1av = numpy.mean(x1,axis=1,keepdims=True)
+        x1av = np.mean(x1,axis=1,keepdims=True)
         x1var = x1.var(axis=1,keepdims=True)
-        x2av = numpy.mean(x2,axis=1,keepdims=True)
+        x2av = np.mean(x2,axis=1,keepdims=True)
         x2var = x2.var(axis=1,keepdims=True)
-        covar_x1x2 = numpy.mean((x1-numpy.mean(x1,axis=1,keepdims=True)) * \
-                             (x2-numpy.mean(x2,axis=1,keepdims=True)),
+        covar_x1x2 = np.mean((x1-np.mean(x1,axis=1,keepdims=True)) * \
+                             (x2-np.mean(x2,axis=1,keepdims=True)),
                              axis=1,keepdims=True)
 
         # compute the regression slopes for OLS(X2|X1), OLS(X1|X2),
@@ -104,15 +104,15 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
             modelint = 1
         else:
             modelint = 4
-        b = numpy.zeros((modelint,nsim))
+        b = np.zeros((modelint,nsim))
         b[0] = ((covar_x1x2 - sig12var) / (x1var - sig11var)).flatten()
         if model != 'yx':
             b[1] = ((x2var - sig22var) / (covar_x1x2 - sig12var)).flatten()
-            b[2] = ((b[0] * b[1] - 1 + numpy.sqrt((1 + b[0] ** 2) * \
+            b[2] = ((b[0] * b[1] - 1 + np.sqrt((1 + b[0] ** 2) * \
                    (1 + b[1] ** 2))) / (b[0] + b[1])).flatten()
-            b[3] = 0.5 * ((b[1] - 1 / b[0]) + numpy.sign(covar_x1x2).flatten()*
+            b[3] = 0.5 * ((b[1] - 1 / b[0]) + np.sign(covar_x1x2).flatten()*
 \
-                   numpy.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
+                   np.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
 
         # compute intercepts for above 4 cases:
         a = x2av.flatten() - b * x1av.flatten()
@@ -132,19 +132,19 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
                        xi[1] * (1 + b[0].reshape(nsim,1) ** 2)) / \
                       ((b[0].reshape(nsim,1) + \
                        b[1].reshape(nsim,1)) * \
-                       numpy.sqrt((1 + b[0].reshape(nsim,1) ** 2) * \
+                       np.sqrt((1 + b[0].reshape(nsim,1) ** 2) * \
                                (1 + b[1].reshape(nsim,1) ** 2))))
             xi.append((xi[0] / b[0].reshape(nsim,1) ** 2 + xi[1]) * \
                       b[3].reshape(nsim,1) / \
-                      numpy.sqrt(4 + (b[1].reshape(nsim,1) - \
+                      np.sqrt(4 + (b[1].reshape(nsim,1) - \
                               1 / b[0].reshape(nsim,1)) ** 2))
         zeta = []
         for i in xrange(modelint):
             zeta.append(x2 - b[i].reshape(nsim,1) * x1 - x1av * xi[i])
 
         # calculate  variance for all a and b
-        bvar = numpy.zeros((4,nsim))
-        avar = numpy.zeros((4,nsim))
+        bvar = np.zeros((4,nsim))
+        avar = np.zeros((4,nsim))
         for i in xrange(modelint):
             bvar[i] = xi[i].var(axis=1,keepdims=False)/ npts
             avar[i] = zeta[i].var(axis=1,keepdims=False) / npts
@@ -161,20 +161,20 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         sig22var = (x2err**2).sum() / npts
         sig12var = cerr.sum() / npts
         # calculate means and variances
-        x1av = numpy.average(x1)
-        x1var = numpy.var(x1)
-        x2av = numpy.average(x2)
-        x2var = numpy.var(x2)
+        x1av = np.average(x1)
+        x1var = np.var(x1)
+        x2av = np.average(x2)
+        x2var = np.var(x2)
         covar_x1x2 = ((x1 - x1av) * (x2 - x2av)).sum() / npts
         # compute the regression slopes for OLS(X2|X1), OLS(X1|X2),
         # bisector and orthogonal
-        b = numpy.zeros(4)
+        b = np.zeros(4)
         b[0] = (covar_x1x2 - sig12var) / (x1var - sig11var)
         b[1] = (x2var - sig22var) / (covar_x1x2 - sig12var)
-        b[2] = (b[0] * b[1] - 1 + numpy.sqrt((1 + b[0]**2) * \
+        b[2] = (b[0] * b[1] - 1 + np.sqrt((1 + b[0]**2) * \
                (1 + b[1] ** 2))) / (b[0] + b[1])
-        b[3] = 0.5 * ((b[1] - 1 / b[0]) + numpy.sign(covar_x1x2) * \
-               numpy.sqrt(4 + (b[1] - 1 / b[0])**2))
+        b[3] = 0.5 * ((b[1] - 1 / b[0]) + np.sign(covar_x1x2) * \
+               np.sqrt(4 + (b[1] - 1 / b[0])**2))
         # compute intercepts for above 4 cases:
         a = x2av - b * x1av
         # set up variables to calculate standard deviations of slope
@@ -184,20 +184,20 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
               ((x2 - x2av) * (x2 - b[1]*x1 - a[1]) + x2err**2) / \
                covar_x1x2]
         xi.append((xi[0] * (1 + b[1]**2) + xi[1] * (1 + b[0]**2)) / \
-                  ((b[0] + b[1]) * numpy.sqrt((1 + b[0]**2) * (1 + b[1]**2))))
+                  ((b[0] + b[1]) * np.sqrt((1 + b[0]**2) * (1 + b[1]**2))))
         xi.append((xi[0] / b[0]**2 + xi[1]) * b[3] / \
-                  numpy.sqrt(4 + (b[1] - 1 / b[0])**2))
+                  np.sqrt(4 + (b[1] - 1 / b[0])**2))
         zeta = [x2 - bi*x1 - x1av*xii for bi, xii in zip(b, xi)]
         # calculate  variance for all a and b
-        avar = numpy.var(zeta, axis=1) / npts
-        bvar = numpy.var(xi, axis=1) / npts
+        avar = np.var(zeta, axis=1) / npts
+        bvar = np.var(xi, axis=1) / npts
         return a, b, avar, bvar, xi, zeta
 
     def _bootspbec(npts, x, y, xerr, yerr, cerr):
         """
         Bootstrap samples
         """
-        b = numpy.random.randint(npts, size=npts)
+        b = np.random.randint(npts, size=npts)
         xboot = x[b]
         xerrboot = xerr[b]
         yboot = y[b]
@@ -206,25 +206,25 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         return xboot, yboot, xerrboot, yerrboot, cerrboot
 
     def _bootsamples(bootstrap, npts, x, y, xerr, yerr, cerr):
-        b = numpy.random.randint(npts, size=(bootstrap,npts))
-        out = numpy.transpose([x[b], y[b], xerr[b], yerr[b], cerr[b]],
+        b = np.random.randint(npts, size=(bootstrap,npts))
+        out = np.transpose([x[b], y[b], xerr[b], yerr[b], cerr[b]],
                               axes=(1,0,2))
         return out
 
     # ----  Main routine starts here  ---- #
     # convert to numpy arrays just in case
-    x1 = numpy.array(x1)
-    x2 = numpy.array(x2)
-    x1err = numpy.array(x1err)
-    x2err = numpy.array(x2err)
-    cerr = numpy.array(cerr)
+    x1 = np.array(x1)
+    x2 = np.array(x2)
+    x1err = np.array(x1err)
+    x2err = np.array(x2err)
+    cerr = np.array(cerr)
     npts = len(x1)
     if len(x1err) == 0:
-        x1err = numpy.zeros(npts)
+        x1err = np.zeros(npts)
     if len(x2err) == 0:
-        x2err = numpy.zeros(npts)
+        x2err = np.zeros(npts)
     if len(cerr) == 0:
-        cerr = numpy.zeros(npts)
+        cerr = np.zeros(npts)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
     models = [['yx', 'xy', 'bi', 'orth'],
@@ -248,33 +248,33 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     a, b, avar, bvar, xi, zeta = bessresults
     # covariance between normalization and slope
     if full_output:
-        cov_ab = numpy.cov(zeta[j], xi[j])
+        cov_ab = np.cov(zeta[j], xi[j])
 
     if bootstrap is not False:
         # make bootstrap simulated datasets, and compute averages and
         # standard deviations of regression coefficients
-        #asum, assum, bsum, bssum, sda, sdb = numpy.zeros((6,4))
-        asim = numpy.zeros((bootstrap,4))
-        bsim = numpy.zeros((bootstrap,4))
+        #asum, assum, bsum, bssum, sda, sdb = np.zeros((6,4))
+        asim = np.zeros((bootstrap,4))
+        bsim = np.zeros((bootstrap,4))
         samples = _bootsamples(bootstrap, npts, x1, x2, x1err, x2err, cerr)
         for i in xrange(bootstrap):
             asim[i], bsim[i] = _bess(npts, *samples[i])[:2]
         # this may happen when there are too few points and the chance of
         # all values being the same is not negligible (e.g., for 5 data
         # points this happens in ~1% of the samples)
-        bad = (numpy.isnan(asim)) | (numpy.isinf(asim))
+        bad = (np.isnan(asim)) | (np.isinf(asim))
         nbad = bad[bad].size
         asim = asim[~bad].reshape((bootstrap-nbad/4,4))
         bsim = bsim[~bad].reshape((bootstrap-nbad/4,4))
-        assum = numpy.sum(asim**2, axis=0)
-        bssum = numpy.sum(bsim**2, axis=0)
-        aavg = numpy.sum(asim, axis=0) / bootstrap
-        bavg = numpy.sum(bsim, axis=0) / bootstrap
+        assum = np.sum(asim**2, axis=0)
+        bssum = np.sum(bsim**2, axis=0)
+        aavg = np.sum(asim, axis=0) / bootstrap
+        bavg = np.sum(bsim, axis=0) / bootstrap
 
-        sda = numpy.sqrt((assum - bootstrap * aavg**2) / (bootstrap-1))
-        sdb = numpy.sqrt((bssum - bootstrap * bavg**2) / (bootstrap-1))
-        sda[numpy.isnan(sda)] = 0
-        sdb[numpy.isnan(sdb)] = 0
+        sda = np.sqrt((assum - bootstrap * aavg**2) / (bootstrap-1))
+        sdb = np.sqrt((bssum - bootstrap * bavg**2) / (bootstrap-1))
+        sda[np.isnan(sda)] = 0
+        sdb[np.isnan(sdb)] = 0
 
     if verbose in ('normal', 'debug'):
         print 'Fit                   B          err(B)'
@@ -282,7 +282,7 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         for i in xrange(4):
             print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
                   %(models[1][i].ljust(16), b[i],
-                    numpy.sqrt(bvar[i]), a[i], numpy.sqrt(avar[i]))
+                    np.sqrt(bvar[i]), a[i], np.sqrt(avar[i]))
             if bootstrap is not False:
                 print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
                       %('bootstrap'.ljust(16), bavg[i],
@@ -298,12 +298,12 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         else:
           return (a[j], sda[j]), (b[j], sdb[j])
     if full_output:
-        out = ((a[j], numpy.sqrt(avar[j])),
-               (b[j], numpy.sqrt(bvar[j])),
+        out = ((a[j], np.sqrt(avar[j])),
+               (b[j], np.sqrt(bvar[j])),
                cov_ab)
     else:
-        out = ((a[j], numpy.sqrt(avar[j])),
-               (b[j], numpy.sqrt(bvar[j])))
+        out = ((a[j], np.sqrt(avar[j])),
+               (b[j], np.sqrt(bvar[j])))
     return out
 
 def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
@@ -317,8 +317,8 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     if len(x2err) == n:
         s_obs = sum((x2err / x2) ** 2) / n
         s0 = s - s_obs
-    print numpy.sqrt(s), numpy.sqrt(s_obs), numpy.sqrt(s0)
-    return numpy.sqrt(s0)
+    print np.sqrt(s), np.sqrt(s_obs), np.sqrt(s0)
+    return np.sqrt(s0)
 
 def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
           miniter=5000, maxiter=1e5, metro=True, silent=True,
@@ -354,11 +354,11 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     if len(x2) != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
-        x1err = numpy.zeros(n)
+        x1err = np.zeros(n)
     if len(x2err) == 0:
-        x2err = numpy.zeros(n)
+        x2err = np.zeros(n)
     if len(cerr) == 0:
-        cerr = numpy.zeros(n)
+        cerr = np.zeros(n)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
     idl = pidly.IDL()
@@ -382,10 +382,10 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     idl(cmd)
     alpha = idl.ev('fit.alpha')
     beta = idl.ev('fit.beta')
-    sigma = numpy.sqrt(idl.ev('fit.sigsqr'))
+    sigma = np.sqrt(idl.ev('fit.sigsqr'))
     if full_output:
         return alpha, beta, sigma
-    out = [(numpy.median(i), numpy.std(i)) for i in (alpha, beta, sigma)]
+    out = [(np.median(i), np.std(i)) for i in (alpha, beta, sigma)]
     return out
 
 def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
@@ -431,42 +431,42 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
     """
     import emcee
     if len(x1err) == 0:
-        x1err = numpy.ones(len(x1))
+        x1err = np.ones(len(x1))
     if len(x2err) == 0:
-        x2err = numpy.ones(len(x1))
+        x2err = np.ones(len(x1))
     def lnlike(theta, x, y, xerr, yerr):
         a, b, s = theta
         model = a + b*x
-        sigma = numpy.sqrt((b*xerr)**2 + yerr*2 + s**2)
-        lglk = 2 * sum(numpy.log(sigma)) + \
+        sigma = np.sqrt((b*xerr)**2 + yerr*2 + s**2)
+        lglk = 2 * sum(np.log(sigma)) + \
                sum(((y-model) / sigma) ** 2) + \
-               numpy.log(len(x)) * numpy.sqrt(2*numpy.pi) / 2
+               np.log(len(x)) * np.sqrt(2*np.pi) / 2
         return -lglk
     def lnprior(theta):
         a, b, s = theta
         if s >= 0:
             return 0
-        return -numpy.inf
+        return -np.inf
     def lnprob(theta, x, y, xerr, yerr):
         lp = lnprior(theta)
         return lp + lnlike(theta, x, y, xerr, yerr)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
-    start = numpy.array(po)
+    start = np.array(po)
     ndim = len(start)
-    pos = [start + 1e-4*numpy.random.randn(ndim) for i in range(nwalkers)]
+    pos = [start + 1e-4*np.random.randn(ndim) for i in range(nwalkers)]
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob,
                                     args=(x1,x2,x1err,x2err))
     sampler.run_mcmc(pos, nsteps)
-    samples = numpy.array([sampler.chain[:,nburn:,i].reshape(-1) \
+    samples = np.array([sampler.chain[:,nburn:,i].reshape(-1) \
                            for i in xrange(ndim)])
     if logify:
-        samples[2] *= numpy.log(10)
+        samples[2] *= np.log(10)
     if output == 'full':
         return samples
     else:
         try:
-            values = [[numpy.percentile(s, o) for o in output]
+            values = [[np.percentile(s, o) for o in output]
                       for s in samples]
             return values
         except TypeError:
@@ -507,7 +507,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
                   given for the equation log(y)=a+b*log(x) -- i.e., the
                   zero point must be converted to 10**a if logify=True
       full_output : boolean (default False)
-                  numpy.optimize.fmin's full_output argument
+                  np.optimize.fmin's full_output argument
 
     Returns
     -------
@@ -524,16 +524,16 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     if x2.size != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
-        x1err = 1e-8 * numpy.absolute(x1.min()) * numpy.ones(n)
+        x1err = 1e-8 * np.absolute(x1.min()) * np.ones(n)
     if len(x2err) == 0:
-        x2err = 1e-8 * numpy.absolute(x2.min()) * numpy.ones(n)
+        x2err = 1e-8 * np.absolute(x2.min()) * np.ones(n)
     if logify:
         x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
 
-    log = numpy.log
+    log = np.log
     fmin = optimize.fmin
 
-    norm = log(n * (2*numpy.pi)**0.5) / 2
+    norm = log(n * (2*np.pi)**0.5) / 2
     f = lambda x, a, b: a + b * x
     if s_int:
         w = lambda b, s, dx, dy: ((b*dx)**2 + dy**2 + s**2)**0.5
@@ -555,16 +555,16 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
         return fit
     #def _loglike(p, x, y):
         #return norm + (2*log(p[2]) + ((y - f(x, *p[:2])) / p[2])**2).sum()
-    jboot = numpy.random.randint(0, n, (bootstrap,n))
+    jboot = np.random.randint(0, n, (bootstrap,n))
     boot = [fmin(_loglike, po, args=(x1[j],x2[j],x1err[j],x2err[j]),
                  disp=False, full_output=False)
             for j in jboot]
-    out_err = numpy.std(boot, axis=0)
+    out_err = np.std(boot, axis=0)
     # uncertainties by looking at the chi2
     #chi2 = (((x2 - f(*out[:2])) / x2err)**2).sum()
     #dof = len(x1) - 3 - 1
     #print 'chi2/dof = %.2f/%d = %.2f' %(chi2, dof, chi2/dof)
-    out = numpy.transpose([fit, out_err])
+    out = np.transpose([fit, out_err])
     return out
 
 def to_log(x1, x2, x1err=[], x2err=[]):
@@ -572,16 +572,16 @@ def to_log(x1, x2, x1err=[], x2err=[]):
     Take linear measurements and uncertainties and transform to log values.
 
     """
-    logx1 = numpy.log10(numpy.array(x1))
-    logx2 = numpy.log10(numpy.array(x2))
-    if numpy.any(x1err):
-        x1err = numpy.log10(numpy.array(x1)+numpy.array(x1err)) - logx1
+    logx1 = np.log10(np.array(x1))
+    logx2 = np.log10(np.array(x2))
+    if np.any(x1err):
+        x1err = np.log10(np.array(x1)+np.array(x1err)) - logx1
     else:
-        x1err = numpy.zeros(x1.size)
-    if numpy.any(x2err):
-        x2err = numpy.log10(numpy.array(x2)+numpy.array(x2err)) - logx2
+        x1err = np.zeros(x1.size)
+    if np.any(x2err):
+        x2err = np.log10(np.array(x2)+np.array(x2err)) - logx2
     else:
-        x2err = numpy.zeros(x1.size)
+        x2err = np.zeros(x1.size)
     return logx1, logx2, x1err, x2err
 
 def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
@@ -589,7 +589,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
     """
     alpha is used to shade the uncertainties from a_err and b_err
 
-    **kwargs is passed to pylab.plot() for the central line only
+    **kwargs is passed to plt.plot() for the central line only
 
     """
     if log:
@@ -599,20 +599,20 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
     else:
         y = lambda A, B: A + B * (t - pivot)
     if ax is None:
-        ax = pylab
+        ax = plt
     ax.plot(t, y(a,b), ls='-', color=color, lw=lw, **kwargs)
     if a_err != 0 or b_err != 0:
         # to make it compatible with either one or two values
-        a_err = numpy.array([a_err]).flatten()
-        b_err = numpy.array([b_err]).flatten()
+        a_err = np.array([a_err]).flatten()
+        b_err = np.array([b_err]).flatten()
         if a_err.size == 1:
             a_err = [a_err, a_err]
         if b_err.size == 1:
             b_err = [b_err, b_err]
         err = [y(a-a_err[0], b-b_err[0]), y(a-a_err[0], b+b_err[1]),
                y(a+a_err[1], b-b_err[0]), y(a+a_err[1], b+b_err[1])]
-        ylo = numpy.min(err, axis=0)
-        yhi = numpy.max(err, axis=0)
+        ylo = np.min(err, axis=0)
+        yhi = np.max(err, axis=0)
         ax.fill_between(t, ylo, yhi, color=color, alpha=alpha, lw=0,
                         edgecolor='none')
     if s:
