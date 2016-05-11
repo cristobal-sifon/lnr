@@ -11,6 +11,7 @@ from itertools import izip
 from matplotlib import pyplot as plt
 from scipy import optimize
 
+
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
          bootstrap=5000, verbose='normal', full_output=True):
     """
@@ -306,19 +307,6 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
                (b[j], np.sqrt(bvar[j])))
     return out
 
-def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
-    """
-    Used mainly to measure scatter for the BCES best-fit
-
-    """
-    n = len(x1)
-    x2pred = zero + slope * x1
-    s = sum((x2 - x2pred) ** 2) / (n - 1)
-    if len(x2err) == n:
-        s_obs = sum((x2err / x2) ** 2) / n
-        s0 = s - s_obs
-    print np.sqrt(s), np.sqrt(s_obs), np.sqrt(s0)
-    return np.sqrt(s0)
 
 def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
           miniter=5000, maxiter=1e5, metro=True, silent=True,
@@ -387,6 +375,7 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
         return alpha, beta, sigma
     out = [(np.median(i), np.std(i)) for i in (alpha, beta, sigma)]
     return out
+
 
 def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
          nsteps=5000, nwalkers=100, nburn=500, output='full'):
@@ -475,6 +464,7 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
             print msg
             exit()
     return
+
 
 def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
         bootstrap=1000, verbose=False, logify=True, full_output=False):
@@ -567,22 +557,6 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     out = np.transpose([fit, out_err])
     return out
 
-def to_log(x1, x2, x1err=[], x2err=[]):
-    """
-    Take linear measurements and uncertainties and transform to log values.
-
-    """
-    logx1 = np.log10(np.array(x1))
-    logx2 = np.log10(np.array(x2))
-    if np.any(x1err):
-        x1err = np.log10(np.array(x1)+np.array(x1err)) - logx1
-    else:
-        x1err = np.zeros(x1.size)
-    if np.any(x2err):
-        x2err = np.log10(np.array(x2)+np.array(x2err)) - logx2
-    else:
-        x2err = np.zeros(x1.size)
-    return logx1, logx2, x1err, x2err
 
 def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
          log=False, color='b', lw=2, alpha=0.5, **kwargs):
@@ -623,3 +597,45 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
             ax.plot(t, y(a,b) + s, ls='--', color=color, lw=lw)
             ax.plot(t, y(a,b) - s, ls='--', color=color, lw=lw)
     return
+
+
+def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
+    """
+    Used mainly to measure scatter for the BCES best-fit
+
+    """
+    n = len(x1)
+    x2pred = zero + slope * x1
+    s = sum((x2 - x2pred) ** 2) / (n - 1)
+    if len(x2err) == n:
+        s_obs = sum((x2err / x2) ** 2) / n
+        s0 = s - s_obs
+    print np.sqrt(s), np.sqrt(s_obs), np.sqrt(s0)
+    return np.sqrt(s0)
+
+
+def to_linear(logx, logxerr):
+    """
+    Take log measurements and uncertainties and convert to linear values.
+
+    """
+    x = 10**np.array(logx)
+    if np.any(logxerr):
+        xerr = 10**(logx+logxerr) - x
+    else:
+        xerr = np.zeros(x.size)
+    return x, xerr
+
+
+def to_log(x, xerr=[]):
+    """
+    Take linear measurements and uncertainties and transform to log values.
+
+    """
+    logx = np.log10(np.array(x))
+    if np.any(xerr):
+        xerr = np.log10(np.array(x)+np.array(xerr)) - logx
+    else:
+        xerr = np.zeros(x.size)
+    return logx, xerr
+
