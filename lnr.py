@@ -111,8 +111,7 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
             b[1] = ((x2var - sig22var) / (covar_x1x2 - sig12var)).flatten()
             b[2] = ((b[0] * b[1] - 1 + np.sqrt((1 + b[0] ** 2) * \
                    (1 + b[1] ** 2))) / (b[0] + b[1])).flatten()
-            b[3] = 0.5 * ((b[1] - 1 / b[0]) + np.sign(covar_x1x2).flatten()*
-\
+            b[3] = 0.5 * ((b[1] - 1/b[0]) + np.sign(covar_x1x2).flatten() * \
                    np.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
 
         # compute intercepts for above 4 cases:
@@ -227,7 +226,8 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     if len(cerr) == 0:
         cerr = np.zeros(npts)
     if logify:
-        x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
+        x1, x1errr = to_log(x1, x1err)
+        x2, x1errr = to_log(x2, x2err)
     models = [['yx', 'xy', 'bi', 'orth'],
               ['BCES(Y|X)', 'BCES(X|Y)', 'BCES Bisector', 'BCES Orthogonal']]
     # which to return?
@@ -348,7 +348,8 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     if len(cerr) == 0:
         cerr = np.zeros(n)
     if logify:
-        x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
+        x1, x1errr = to_log(x1, x1err)
+        x2, x1errr = to_log(x2, x2err)
     idl = pidly.IDL()
     idl('x1', x1)
     idl('x2', x2)
@@ -440,7 +441,8 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
         lp = lnprior(theta)
         return lp + lnlike(theta, x, y, xerr, yerr)
     if logify:
-        x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
+        x1, x1errr = to_log(x1, x1err)
+        x2, x1errr = to_log(x2, x2err)
     start = np.array(po)
     ndim = len(start)
     pos = [start + 1e-4*np.random.randn(ndim) for i in range(nwalkers)]
@@ -518,7 +520,8 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     if len(x2err) == 0:
         x2err = 1e-8 * np.absolute(x2.min()) * np.ones(n)
     if logify:
-        x1, x2, x1err, x2err = to_log(x1, x2, x1err, x2err)
+        x1, x1errr = to_log(x1, x1err)
+        x2, x1errr = to_log(x2, x2err)
 
     log = np.log
     fmin = optimize.fmin
