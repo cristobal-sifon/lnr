@@ -600,7 +600,12 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
         y = lambda A, B: A + B * (t - pivot)
     if ax is None:
         ax = plt
-    ax.plot(t, y(a,b), ls='-', color=color, lw=lw, **kwargs)
+    # the length may vary depending on whether it's a default color
+    # (e.g., 'r' or 'orange') or an rgb(a) color, etc, but as far as
+    # I can think of none of these would have length 2.
+    if len(color) != 2:
+        color = (color, color)
+    ax.plot(t, y(a,b), ls='-', color=color[0], lw=lw, **kwargs)
     if a_err != 0 or b_err != 0:
         # to make it compatible with either one or two values
         a_err = np.array([a_err]).flatten()
@@ -613,7 +618,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
                y(a+a_err[1], b-b_err[0]), y(a+a_err[1], b+b_err[1])]
         ylo = np.min(err, axis=0)
         yhi = np.max(err, axis=0)
-        ax.fill_between(t, ylo, yhi, color=color, alpha=alpha, lw=0,
+        ax.fill_between(t, ylo, yhi, color=color[1], alpha=alpha, lw=0,
                         edgecolor='none', zorder=-10)
     if s:
         if log:
