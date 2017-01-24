@@ -254,7 +254,6 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     if bootstrap is not False:
         # make bootstrap simulated datasets, and compute averages and
         # standard deviations of regression coefficients
-        #asum, assum, bsum, bssum, sda, sdb = np.zeros((6,4))
         asim = np.zeros((bootstrap,4))
         bsim = np.zeros((bootstrap,4))
         samples = _bootsamples(bootstrap, npts, x1, x2, x1err, x2err, cerr)
@@ -530,7 +529,6 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     f = lambda x, a, b: a + b * x
     if s_int:
         w = lambda b, s, dx, dy: ((b*dx)**2 + dy**2 + s**2)**0.5
-        #w = lambda b, s: ((b*x1err)**2 + x2err**2 + s**2)**0.5
         def _loglike(p, x, y, *args):
             wi = w(p[1], p[2], *args)
             return norm + (2*log(wi) + ((y - f(x, *p[:2])) / wi)**2).sum()
@@ -546,17 +544,11 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     # bootstrap errors?
     if bootstrap is False:
         return fit
-    #def _loglike(p, x, y):
-        #return norm + (2*log(p[2]) + ((y - f(x, *p[:2])) / p[2])**2).sum()
     jboot = np.random.randint(0, n, (bootstrap,n))
     boot = [fmin(_loglike, po, args=(x1[j],x2[j],x1err[j],x2err[j]),
                  disp=False, full_output=False)
             for j in jboot]
     out_err = np.std(boot, axis=0)
-    # uncertainties by looking at the chi2
-    #chi2 = (((x2 - f(*out[:2])) / x2err)**2).sum()
-    #dof = len(x1) - 3 - 1
-    #print 'chi2/dof = %.2f/%d = %.2f' %(chi2, dof, chi2/dof)
     out = np.transpose([fit, out_err])
     return out
 
