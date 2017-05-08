@@ -5,11 +5,18 @@
 Various linear regression techniques
 
 """
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 import stattools
-from itertools import izip
+import sys
 from matplotlib import pyplot as plt
 from scipy import optimize
+
+if sys.version_info[0] == 2:
+    from itertools import izip
+else:
+    izip = zip
 
 
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
@@ -234,15 +241,16 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     j = models[0].index(model)
     # are the errors defined?
     if verbose == 'debug':
-        print 'x1 =', x1
-        print 'x1err =', x1err
-        print 'x2 =', x2
-        print 'x2err =', x2err
-        print 'cerr =', cerr
-        print '\n ** Returning values for', models[1][j], '**'
+        print('x1 =', x1)
+        print('x1err =', x1err)
+        print('x2 =', x2)
+        print('x2err =', x2err)
+        print('cerr =', cerr)
+        print('\n ** Returning values for', models[1][j], '**')
         if bootstrap is not False:
-            print '    with errors from %d bootstrap resamplings' %bootstrap
-        print ''
+            print('    with errors from {} bootstrap resamplings'.format(
+                bootstrap))
+        print()
 
     # calculate nominal fits
     bessresults = _bess(npts, x1, x2, x1err, x2err, cerr)
@@ -278,20 +286,20 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         sdb[np.isnan(sdb)] = 0
 
     if verbose in ('normal', 'debug'):
-        print 'Fit                   B          err(B)'
-        print '         A          err(A)'
+        print('Fit                   B          err(B)')
+        print('         A          err(A)')
         for i in xrange(4):
-            print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
-                  %(models[1][i].ljust(16), b[i],
-                    np.sqrt(bvar[i]), a[i], np.sqrt(avar[i]))
+            print('{0:<16s}  {1:9.2e} +/- {2:8.2e}' \
+                  '    {3:10.3e} +/- {4:9.3e}'.format(
+                      models[1][i], b[i], bvar[i]**0.5, a[i], avar[i]**0.5))
             if bootstrap is not False:
-                print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
-                      %('bootstrap'.ljust(16), bavg[i],
-                        sdb[i], aavg[i], sda[i])
-            print ''
+                print('{0:<16s}  {1:9.2e} +/- {2:8.2e}' \
+                      '    %10.3e +/- %9.3e'.format(
+                          'bootstrap', bavg[i], sdb[i], aavg[i], sda[i]))
+            print()
         if verbose == 'debug':
-            print 'cov[%s] =' %models[model]
-            print covar_ab
+            print('cov[{0}] ='.format(models[model]))
+            print(covar_ab)
 
     if bootstrap is not False:
         if full_output:
@@ -461,9 +469,9 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
                       for s in samples]
             return values
         except TypeError:
-            msg = 'ERROR: wrong value for argument output in mcmc().'
-            msg += ' Must be "full" or list of ints.'
-            print msg
+            msg = 'ERROR: wrong value for argument output in mcmc().' \
+                  ' Must be "full" or list of ints.'
+            print(msg)
             exit()
     return
 
@@ -556,7 +564,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     # uncertainties by looking at the chi2
     #chi2 = (((x2 - f(*out[:2])) / x2err)**2).sum()
     #dof = len(x1) - 3 - 1
-    #print 'chi2/dof = %.2f/%d = %.2f' %(chi2, dof, chi2/dof)
+    #print('chi2/dof = {0:.2f}/{1:d} = {2:.2f}'.format(chi2, dof, chi2/dof))
     out = np.transpose([fit, out_err])
     return out
 
@@ -618,8 +626,8 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     if len(x2err) == n:
         s_obs = sum((x2err / x2) ** 2) / n
         s0 = s - s_obs
-    print np.sqrt(s), np.sqrt(s_obs), np.sqrt(s0)
-    return np.sqrt(s0)
+    #print(s**0.5, s_obs**0.5, s0**0.5)
+    return s0**0.5
 
 
 def to_linear(logx, logxerr):
