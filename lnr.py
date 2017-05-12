@@ -582,6 +582,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
     # I can think of none of these would have length 2.
     if len(color) != 2:
         color = (color, color)
+    print('in lnr.plot: color =', color)
     ax.plot(t, y(a,b), ls='-', color=color[0], lw=lw, **kwargs)
     if a_err != 0 or b_err != 0:
         # to make it compatible with either one or two values
@@ -599,11 +600,11 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
                         edgecolor='none', zorder=-10)
     if s:
         if log:
-            ax.plot(t, (1+s)*y(a,b), ls='--', color=color, lw=lw)
-            ax.plot(t, y(a,b)/(1+s), ls='--', color=color, lw=lw)
+            ax.plot(t, (1+s)*y(a,b), ls='--', color=color[0], lw=lw)
+            ax.plot(t, y(a,b)/(1+s), ls='--', color=color[0], lw=lw)
         else:
-            ax.plot(t, y(a,b) + s, ls='--', color=color, lw=lw)
-            ax.plot(t, y(a,b) - s, ls='--', color=color, lw=lw)
+            ax.plot(t, y(a,b) + s, ls='--', color=color[0], lw=lw)
+            ax.plot(t, y(a,b) - s, ls='--', color=color[0], lw=lw)
     return
 
 
