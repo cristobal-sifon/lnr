@@ -5,11 +5,18 @@
 Various linear regression techniques
 
 """
+from __future__ import absolute_import, division, print_function
+
 import numpy as np
 import stattools
-from itertools import izip
+import sys
 from matplotlib import pyplot as plt
 from scipy import optimize
+
+if sys.version_info[0] == 2:
+    from itertools import izip
+else:
+    izip = zip
 
 
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
@@ -234,15 +241,16 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     j = models[0].index(model)
     # are the errors defined?
     if verbose == 'debug':
-        print 'x1 =', x1
-        print 'x1err =', x1err
-        print 'x2 =', x2
-        print 'x2err =', x2err
-        print 'cerr =', cerr
-        print '\n ** Returning values for', models[1][j], '**'
+        print('x1 =', x1)
+        print('x1err =', x1err)
+        print('x2 =', x2)
+        print('x2err =', x2err)
+        print('cerr =', cerr)
+        print('\n ** Returning values for', models[1][j], '**')
         if bootstrap is not False:
-            print '    with errors from %d bootstrap resamplings' %bootstrap
-        print ''
+            print('    with errors from {} bootstrap resamplings'.format(
+                bootstrap))
+        print()
 
     # calculate nominal fits
     bessresults = _bess(npts, x1, x2, x1err, x2err, cerr)
@@ -277,20 +285,20 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         sdb[np.isnan(sdb)] = 0
 
     if verbose in ('normal', 'debug'):
-        print 'Fit                   B          err(B)'
-        print '         A          err(A)'
+        print('Fit                   B          err(B)')
+        print('         A          err(A)')
         for i in xrange(4):
-            print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
-                  %(models[1][i].ljust(16), b[i],
-                    np.sqrt(bvar[i]), a[i], np.sqrt(avar[i]))
+            print('{0:<16s}  {1:9.2e} +/- {2:8.2e}' \
+                  '    {3:10.3e} +/- {4:9.3e}'.format(
+                      models[1][i], b[i], bvar[i]**0.5, a[i], avar[i]**0.5))
             if bootstrap is not False:
-                print '%s  %9.2e +/- %8.2e    %10.3e +/- %9.3e' \
-                      %('bootstrap'.ljust(16), bavg[i],
-                        sdb[i], aavg[i], sda[i])
-            print ''
+                print('{0:<16s}  {1:9.2e} +/- {2:8.2e}' \
+                      '    %10.3e +/- %9.3e'.format(
+                          'bootstrap', bavg[i], sdb[i], aavg[i], sda[i]))
+            print()
         if verbose == 'debug':
-            print 'cov[%s] =' %models[model]
-            print covar_ab
+            print('cov[{0}] ='.format(models[model]))
+            print(covar_ab)
 
     if bootstrap is not False:
         if full_output:
@@ -460,9 +468,9 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
                       for s in samples]
             return values
         except TypeError:
-            msg = 'ERROR: wrong value for argument output in mcmc().'
-            msg += ' Must be "full" or list of ints.'
-            print msg
+            msg = 'ERROR: wrong value for argument output in mcmc().' \
+                  ' Must be "full" or list of ints.'
+            print(msg)
             exit()
     return
 
@@ -574,6 +582,7 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
     # I can think of none of these would have length 2.
     if len(color) != 2:
         color = (color, color)
+    print('in lnr.plot: color =', color)
     ax.plot(t, y(a,b), ls='-', color=color[0], lw=lw, **kwargs)
     if a_err != 0 or b_err != 0:
         # to make it compatible with either one or two values
@@ -591,11 +600,11 @@ def plot(t, a, b, a_err=0, b_err=0, s=None, pivot=0, ax=None,
                         edgecolor='none', zorder=-10)
     if s:
         if log:
-            ax.plot(t, (1+s)*y(a,b), ls='--', color=color, lw=lw)
-            ax.plot(t, y(a,b)/(1+s), ls='--', color=color, lw=lw)
+            ax.plot(t, (1+s)*y(a,b), ls='--', color=color[0], lw=lw)
+            ax.plot(t, y(a,b)/(1+s), ls='--', color=color[0], lw=lw)
         else:
-            ax.plot(t, y(a,b) + s, ls='--', color=color, lw=lw)
-            ax.plot(t, y(a,b) - s, ls='--', color=color, lw=lw)
+            ax.plot(t, y(a,b) + s, ls='--', color=color[0], lw=lw)
+            ax.plot(t, y(a,b) - s, ls='--', color=color[0], lw=lw)
     return
 
 
@@ -610,8 +619,8 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     if len(x2err) == n:
         s_obs = sum((x2err / x2) ** 2) / n
         s0 = s - s_obs
-    print np.sqrt(s), np.sqrt(s_obs), np.sqrt(s0)
-    return np.sqrt(s0)
+    #print(s**0.5, s_obs**0.5, s0**0.5)
+    return s0**0.5
 
 
 def to_linear(logx, logxerr):
