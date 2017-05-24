@@ -619,11 +619,13 @@ def to_linear(logx, logxerr):
     Take log measurements and uncertainties and convert to linear values.
 
     """
-    x = 10**np.array(logx)
+    logx = np.array(logx)
+    logxerr = np.array(logxerr)
+    x = 10**logx
     if np.any(logxerr):
         xerr = 10**(logx+logxerr) - x
     else:
-        xerr = np.zeros(x.size)
+        xerr = np.zeros_like(x)
     return x, xerr
 
 
@@ -636,6 +638,6 @@ def to_log(x, xerr=[]):
     if np.any(xerr):
         xerr = np.log10(np.array(x)+np.array(xerr)) - logx
     else:
-        xerr = np.zeros(x.size)
+        xerr = np.zeros_like(x)
     return logx, xerr
 
