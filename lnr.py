@@ -16,6 +16,7 @@ if sys.version_info[0] == 2:
     from itertools import izip
 else:
     izip = zip
+    xrange = range
 
 
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
