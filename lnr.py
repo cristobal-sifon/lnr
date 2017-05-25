@@ -272,8 +272,8 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         # points this happens in ~1% of the samples)
         bad = (np.isnan(asim)) | (np.isinf(asim))
         nbad = bad[bad].size
-        asim = asim[~bad].reshape((bootstrap-nbad/4,4))
-        bsim = bsim[~bad].reshape((bootstrap-nbad/4,4))
+        asim = asim[~bad].reshape((bootstrap-nbad//4,4))
+        bsim = bsim[~bad].reshape((bootstrap-nbad//4,4))
         assum = np.sum(asim**2, axis=0)
         bssum = np.sum(bsim**2, axis=0)
         aavg = np.sum(asim, axis=0) / bootstrap
