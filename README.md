@@ -28,7 +28,7 @@ convert a given set of measurements and uncertainties between linear and log spa
 
     lnr.plot(t, a, b, **kwargs)
 
-Used to plot the best-fit linear relation along with a shaded region representing the best-fit uncertainties. Since this function can take a matplotlib axis as a keyword argument, it can be easily embedded within a larger plotting function that includes, for instance, the data points from which the relation is derived.
+can be used to plot the best-fit linear relation along with a shaded region representing the best-fit uncertainties. Since this function can take a matplotlib axis as a keyword argument, it can be easily embedded within a larger plotting function that includes, for instance, the data points from which the relation is derived.
 
 ----
 
