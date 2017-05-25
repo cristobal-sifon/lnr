@@ -8,7 +8,6 @@ Various linear regression techniques
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-import stattools
 import sys
 from matplotlib import pyplot as plt
 from scipy import optimize
