@@ -17,14 +17,14 @@ Python wrapper around the [IDL Bayesian linear regression code](http://idlastro.
 
 Maximum likelihood estimator including intrinsic scatter.
 
---
+##
 
 There are additional, auxiliary functions:
 
     lnr.to_log(x, xerr)
     lnr.to_linear(logx, logxerr)
 
-convert a given set of measurements and uncertainties between linear and log space.
+convert a given set of measurements and uncertainties between linear and log space, and
 
     lnr.plot(t, a, b, **kwargs)
 
