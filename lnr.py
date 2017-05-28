@@ -476,7 +476,7 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
 
 
 def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
-        bootstrap=1000, verbose=False, logify=True, full_output=False):
+        bootstrap=1000, logify=True, **kwargs):
     """
     Maximum Likelihood Estimation of best-fit parameters
 
@@ -485,28 +485,30 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
       x1, x2    : float arrays
                   the independent and dependent variables.
       x1err, x2err : float arrays (optional)
-                  measurement uncertainties on independent and dependent
-                  variables. Any of the two, or both, can be supplied.
+                  measurement uncertainties on independent and
+                  dependent variables. Any of the two, or both, can be
+                  supplied.
       cerr      : float array (same size as x1)
-                  covariance on the measurement errors (NOT YET IMPLEMENTED)
+                  covariance on the measurement errors (NOT YET
+                  IMPLEMENTED)
       s_int     : boolean (default True)
                   whether to include intrinsic scatter in the MLE.
       po        : tuple of floats
-                  initial guess for free parameters. If s_int is True, then
-                  po must have 3 elements; otherwise it can have two (for the
-                  zero point and the slope)
+                  initial guess for free parameters. If `s_int` is
+                  True, then po must have 3 elements; otherwise it can
+                  have two (for the zero point and the slope; any other
+                  elements will be discarded)
       bootstrap : int or False
                   if not False, it is the number of samples with which
                   to estimate uncertainties on the best-fit parameters
-      verbose   : boolean (default False)
-                  verbose?
       logify    : boolean (default True)
                   whether to convert the values to log10's. This is to
-                  calculate the best-fit power law. Note that the result is
-                  given for the equation log(y)=a+b*log(x) -- i.e., the
-                  zero point must be converted to 10**a if logify=True
-      full_output : boolean (default False)
-                  np.optimize.fmin's full_output argument
+                  calculate the best-fit power law. Note that the
+                  result is given for the equation log(y)=a+b*log(x) --
+                  i.e., the zero point must be converted to 10**a if
+                  `logify=True`
+      **kwargs  : dictionary (optional)
+                  arguments passed to `scipy.optimize.fmin`
 
     Returns
     -------
@@ -547,8 +549,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
             return norm + (2*log(wi) + ((y - f(x, *p[:2])) / wi)**2).sum()
         po = po[:2]
 
-    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err),
-               disp=verbose, full_output=full_output)
+    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err), **kwargs)
     # bootstrap errors?
     if bootstrap is False:
         return fit
