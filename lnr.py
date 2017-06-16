@@ -8,7 +8,6 @@ Various linear regression techniques
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-import stattools
 import sys
 from matplotlib import pyplot as plt
 from scipy import optimize, stats
@@ -24,8 +23,8 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
          bootstrap=5000, verbose='normal', full_output=True):
     """
     Bivariate, Correlated Errors and intrinsic Scatter (BCES)
-    translated from the FORTRAN code by Christina Bird and Matthew Bershady
-    (Akritas & Bershady, 1996)
+    translated from the FORTRAN code by Christina Bird and Matthew
+    Bershady (Akritas & Bershady, 1996)
 
     Linear regression in the presence of heteroscedastic errors on both
     variables and intrinsic scatter
@@ -44,17 +43,18 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
                   Covariances of the uncertainties in the dependent and
                   independent variables
       logify    : bool (default True)
-                  Whether to take the log of the measurements in order to
-                  estimate the best-fit power law instead of linear relation
+                  Whether to take the log of the measurements in order
+                  to estimate the best-fit power law instead of linear
+                  relation
       model     : {'yx', 'xy', 'bi', 'orth'}
-                  BCES model with which to calculate regression. See Notes
-                  below for details.
+                  BCES model with which to calculate regression. See
+                  Notes below for details.
       bootstrap : False or int (default 5000)
-                  get the errors from bootstrap resampling instead of the
-                  analytical prescription? if bootstrap is an int, it is the
-                  number of bootstrap resamplings
-      verbose   : str (default 'normal')
-                  Verbose level. Options are {'quiet', 'normal', 'debug'}
+                  get the errors from bootstrap resampling instead of
+                  the analytical prescription? if bootstrap is an int,
+                  it is the number of bootstrap resamplings
+      verbose   : {'quiet', 'normal', 'debug'}
+                  Verbose level
       full_output : bool (default True)
                   If True, return also the covariance between the
                   normalization and slope of the regression.
@@ -69,15 +69,16 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
     Optional outputs
     ----------------
       cov_ab    : 2x2 array of floats
-                  covariance between a and b. Returned if full_output is set to
-                  True.
+                  covariance between a and b. Returned if
+                  `full_output==True`
 
     Notes
     -----
-      If verbose is normal or debug, the results from all the BCES models will
-      be printed (still, only the one selected in *model* will be returned).
+      If verbose is normal or debug, the results from all the BCES
+      models will be printed (still, only the one selected in `model`
+      will be returned).
 
-      the *model* parameter:
+      the `model` parameter:
         -'yx' stands for BCES(Y|X)
         -'xy' stands for BCES(X|Y)
         -'bi' stands for BCES Bisector
@@ -87,24 +88,25 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
 
     def _bess_bootstrap(npts, x1, x2, x1err, x2err, cerr, nsim):
         ##added by Gerrit, July 2014
-        ##Unfortunately I needed a copy of the _bess function for bootstrapping.
-        #Would be nicer if those two could be combined
+        # Unfortunately I needed a copy of the _bess function for
+        # bootstrapping. Would be nicer if those two could be combined
         """
         Do the entire regression calculation for 4 slopes:
         OLS(Y|X), OLS(X|Y), bisector, orthogonal
         """
-        #calculate sigma's for datapoints using length of confidence intervals
-        sig11var = np.sum(x1err ** 2,axis=1,keepdims=True) / npts
-        sig22var = np.sum(x2err ** 2,axis=1,keepdims=True) / npts
-        sig12var = np.sum(cerr,axis=1,keepdims=True) / npts
+        # calculate sigma's for datapoints using length of confidence
+        # intervals
+        sig11var = np.sum(x1err**2, axis=1, keepdims=True) / npts
+        sig22var = np.sum(x2err**2, axis=1, keepdims=True) / npts
+        sig12var = np.sum(cerr, axis=1, keepdims=True) / npts
 
         # calculate means and variances
-        x1av = np.mean(x1,axis=1,keepdims=True)
-        x1var = x1.var(axis=1,keepdims=True)
-        x2av = np.mean(x2,axis=1,keepdims=True)
-        x2var = x2.var(axis=1,keepdims=True)
-        covar_x1x2 = np.mean((x1-np.mean(x1,axis=1,keepdims=True)) * \
-                             (x2-np.mean(x2,axis=1,keepdims=True)),
+        x1av = np.mean(x1, axis=1, keepdims=True)
+        x1var = x1.var(axis=1, keepdims=True)
+        x2av = np.mean(x2, axis=1, keepdims=True)
+        x2var = x2.var(axis=1, keepdims=True)
+        covar_x1x2 = np.mean((x1-np.mean(x1, axis=1, keepdims=True)) \
+                                * (x2-np.mean(x2, axis=1, keepdims=True)),
                              axis=1,keepdims=True)
 
         # compute the regression slopes for OLS(X2|X1), OLS(X1|X2),
@@ -119,8 +121,9 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
             b[1] = ((x2var - sig22var) / (covar_x1x2 - sig12var)).flatten()
             b[2] = ((b[0] * b[1] - 1 + np.sqrt((1 + b[0] ** 2) * \
                    (1 + b[1] ** 2))) / (b[0] + b[1])).flatten()
-            b[3] = 0.5 * ((b[1] - 1/b[0]) + np.sign(covar_x1x2).flatten() * \
-                   np.sqrt(4 + (b[1] - 1 / b[0]) ** 2))
+            b[3] = 0.5 * ((b[1] - 1/b[0]) \
+                          + np.sign(covar_x1x2).flatten() \
+                              * (4 + (b[1] - 1 / b[0]) ** 2)**0.5)
 
         # compute intercepts for above 4 cases:
         a = x2av.flatten() - b * x1av.flatten()
@@ -128,10 +131,10 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         # set up variables to calculate standard deviations of slope and
         # intercept
         xi = []
-        xi.append(((x1 - x1av) * (x2 - b[0].reshape(nsim,1) * x1 - \
-                                  a[0].reshape(nsim,1)) + \
-                   b[0].reshape(nsim,1) * x1err ** 2) / \
-                  (x1var - sig11var))
+        xi.append(((x1 - x1av) * (x2 - b[0].reshape(nsim,1) * x1 \
+                                  - a[0].reshape(nsim,1)) \
+                   + b[0].reshape(nsim,1) * x1err ** 2) \
+                  / (x1var - sig11var))
         if model != 'yx':
             xi.append(((x2 - x2av) * (x2 - b[1].reshape(nsim,1) * x1 - \
                                       a[1].reshape(nsim,1)) + x2err ** 2) / \
@@ -273,8 +276,8 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
         # points this happens in ~1% of the samples)
         bad = (np.isnan(asim)) | (np.isinf(asim))
         nbad = bad[bad].size
-        asim = asim[~bad].reshape((bootstrap-nbad/4,4))
-        bsim = bsim[~bad].reshape((bootstrap-nbad/4,4))
+        asim = asim[~bad].reshape((bootstrap-nbad//4,4))
+        bsim = bsim[~bad].reshape((bootstrap-nbad//4,4))
         assum = np.sum(asim**2, axis=0)
         bssum = np.sum(bsim**2, axis=0)
         aavg = np.sum(asim, axis=0) / bootstrap
@@ -338,8 +341,8 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
                   Covariances of the uncertainties in the dependent and
                   independent variables
       full_output : bool
-                  whether to return best-fit and 1sigma uncertainties or the
-                  full MCMC chain
+                  whether to return best-fit and 1sigma uncertainties
+                  or the full MCMC chain
 
     Returns
     -------
@@ -417,15 +420,16 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
                   from a normal distribution with mean `start` and
                   standard deviation `starting_width*start`
       logify    : bool (default True)
-                  Whether to take the log of the measurements in order to
-                  estimate the best-fit power law instead of linear relation
+                  Whether to take the log of the measurements in order
+                  to estimate the best-fit power law instead of linear
+                  relation
       nsteps    : int (default 5000)
                   Number of steps each walker should take in the MCMC
       nwalkers  : int (default 100)
                   Number of MCMC walkers
       nburn     : int (default 500)
-                  Number of samples to discard to give the MCMC enough time
-                  to converge.
+                  Number of samples to discard to give the MCMC enough
+                  time to converge.
       output    : list of ints or 'full' (default 'full')
                   If 'full', then return the full samples (except for
                   burn-in section) for each parameter. Otherwise, each
@@ -511,7 +515,7 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
 
 
 def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
-        bootstrap=1000, verbose=False, logify=True, full_output=False):
+        bootstrap=1000, logify=True, **kwargs):
     """
     Maximum Likelihood Estimation of best-fit parameters
 
@@ -520,34 +524,36 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
       x1, x2    : float arrays
                   the independent and dependent variables.
       x1err, x2err : float arrays (optional)
-                  measurement uncertainties on independent and dependent
-                  variables. Any of the two, or both, can be supplied.
+                  measurement uncertainties on independent and
+                  dependent variables. Any of the two, or both, can be
+                  supplied.
       cerr      : float array (same size as x1)
-                  covariance on the measurement errors (NOT YET IMPLEMENTED)
+                  covariance on the measurement errors (NOT YET
+                  IMPLEMENTED)
       s_int     : boolean (default True)
                   whether to include intrinsic scatter in the MLE.
       po        : tuple of floats
-                  initial guess for free parameters. If s_int is True, then
-                  po must have 3 elements; otherwise it can have two (for the
-                  zero point and the slope)
+                  initial guess for free parameters. If `s_int` is
+                  True, then po must have 3 elements; otherwise it can
+                  have two (for the zero point and the slope; any other
+                  elements will be discarded)
       bootstrap : int or False
                   if not False, it is the number of samples with which
                   to estimate uncertainties on the best-fit parameters
-      verbose   : boolean (default False)
-                  verbose?
       logify    : boolean (default True)
                   whether to convert the values to log10's. This is to
-                  calculate the best-fit power law. Note that the result is
-                  given for the equation log(y)=a+b*log(x) -- i.e., the
-                  zero point must be converted to 10**a if logify=True
-      full_output : boolean (default False)
-                  np.optimize.fmin's full_output argument
+                  calculate the best-fit power law. Note that the
+                  result is given for the equation log(y)=a+b*log(x) --
+                  i.e., the zero point must be converted to 10**a if
+                  `logify=True`
+      **kwargs  : dictionary (optional)
+                  arguments passed to `scipy.optimize.fmin`
 
     Returns
     -------
       a         : float
-                  Maximum Likelihood Estimate of the zero point. Note that
-                  if logify=True, the power-law intercept is 10**a
+                  Maximum Likelihood Estimate of the zero point. Note
+                  that if logify=True, the power-law intercept is 10**a
       b         : float
                   Maximum Likelihood Estimate of the slope
       s         : float (optional, if s_int=True)
@@ -582,8 +588,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
             return norm + (2*log(wi) + ((y - f(x, *p[:2])) / wi)**2).sum()
         po = po[:2]
 
-    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err),
-               disp=verbose, full_output=full_output)
+    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err), **kwargs)
     # bootstrap errors?
     if bootstrap is False:
         return fit
@@ -660,26 +665,30 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
 
 def to_linear(logx, logxerr):
     """
-    Take log measurements and uncertainties and convert to linear values.
+    Take log measurements and uncertainties and convert to linear
+    values.
 
     """
-    x = 10**np.array(logx)
+    logx = np.array(logx)
+    logxerr = np.array(logxerr)
+    x = 10**logx
     if np.any(logxerr):
         xerr = 10**(logx+logxerr) - x
     else:
-        xerr = np.zeros(x.size)
+        xerr = np.zeros_like(x)
     return x, xerr
 
 
 def to_log(x, xerr=[]):
     """
-    Take linear measurements and uncertainties and transform to log values.
+    Take linear measurements and uncertainties and transform to log
+    values.
 
     """
     logx = np.log10(np.array(x))
     if np.any(xerr):
         xerr = np.log10(np.array(x)+np.array(xerr)) - logx
     else:
-        xerr = np.zeros(x.size)
+        xerr = np.zeros_like(x)
     return logx, xerr
 
