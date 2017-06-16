@@ -11,12 +11,13 @@ import numpy as np
 import stattools
 import sys
 from matplotlib import pyplot as plt
-from scipy import optimize
+from scipy import optimize, stats
 
 if sys.version_info[0] == 2:
     from itertools import izip
 else:
     izip = zip
+    xrange = range
 
 
 def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
@@ -385,11 +386,17 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     return out
 
 
-def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
+def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
+         starting_width=0.01, logify=True,
          nsteps=5000, nwalkers=100, nburn=500, output='full'):
     """
     Use emcee to find the best-fit linear relation or power law
-    accounting for measurement uncertainties and intrinsic scatter
+    accounting for measurement uncertainties and intrinsic scatter.
+
+    Assumes the following priors:
+        intercept ~ uniform in the range (-inf,inf)
+        slope ~ Student's t with 1 degree of freedom
+        intrinsic scatter ~ 1/scatter
 
     Parameters
     ----------
@@ -401,10 +408,14 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
                   Uncertainties on the independent variable
       x2err     : array of floats (optional)
                   Uncertainties on the dependent variable
-      po        : tuple of 3 floats (optional)
+      start     : tuple of 3 floats (optional)
                   Initial guesses for zero point, slope, and intrinsic
-                  scatter. Results are not very sensitive to these values
-                  so they shouldn't matter a lot.
+                  scatter. Results are not very sensitive to these
+                  values so they shouldn't matter a lot.
+      starting_width : float
+                  Starting points for each walker will be drawn
+                  from a normal distribution with mean `start` and
+                  standard deviation `starting_width*start`
       logify    : bool (default True)
                   Whether to take the log of the measurements in order to
                   estimate the best-fit power law instead of linear relation
@@ -416,48 +427,72 @@ def mcmc(x1, x2, x1err=[], x2err=[], po=(1.,1.,0.5), logify=True,
                   Number of samples to discard to give the MCMC enough time
                   to converge.
       output    : list of ints or 'full' (default 'full')
-                  If 'full', then return the full samples (except for burn-in
-                  section) for each parameter. Otherwise, each float
-                  corresponds to a percentile that will be returned for
-                  each parameter.
+                  If 'full', then return the full samples (except for
+                  burn-in section) for each parameter. Otherwise, each
+                  float corresponds to a percentile that will be
+                  returned for each parameter.
 
     Returns
     -------
-      See *output* argument above for return options.
+      The returned value is a numpy array whose shape depends on the
+      choice of `output`, but in all cases it either corresponds to the
+      posterior samples or the chosen percentiles of three parameters:
+      the normalization (or intercept), the slope and the intrinsic
+      scatter of a (log-)linear fit to the data.
 
     """
     import emcee
-    if len(x1err) == 0:
-        x1err = np.ones(len(x1))
-    if len(x2err) == 0:
-        x2err = np.ones(len(x1))
+    # just in case
+    x1 = np.array(x1)
+    x2 = np.array(x2)
+    if x1err is None:
+        x1err = np.ones(x1.size)
+    if x2err is None:
+        x2err = np.ones(x1.size)
+
     def lnlike(theta, x, y, xerr, yerr):
+        """Likelihood"""
         a, b, s = theta
         model = a + b*x
-        sigma = np.sqrt((b*xerr)**2 + yerr*2 + s**2)
-        lglk = 2 * sum(np.log(sigma)) + \
-               sum(((y-model) / sigma) ** 2) + \
-               np.log(len(x)) * np.sqrt(2*np.pi) / 2
+        sigma = ((b*xerr)**2 + yerr*2 + s**2)**0.5
+        lglk = 2 * np.log(sigma).sum() + \
+               (((y-model) / sigma)**2).sum() + \
+               np.log(x.size) * (2*np.pi)**0.5 / 2
         return -lglk
     def lnprior(theta):
+        """
+        Prior. Scatter must be positive; using a Student's t
+        distribution with 1 dof for the slope.
+        """
         a, b, s = theta
-        if s >= 0:
-            return 0
-        return -np.inf
+        # positive scatter
+        if s < 0:
+            return -np.inf
+        # flat prior on intercept
+        lnp_a = 0
+        # Student's t for slope
+        lnp_b = np.log(stats.t.pdf(b, 1))
+        # Jeffrey's prior for scatter (not normalized)
+        ln_s = -s
+        # total
+        return lnp_a + lnp_b + lnp_s
     def lnprob(theta, x, y, xerr, yerr):
+        """Posterior"""
         lp = lnprior(theta)
         return lp + lnlike(theta, x, y, xerr, yerr)
+
     if logify:
         x1, x1errr = to_log(x1, x1err)
         x2, x1errr = to_log(x2, x2err)
-    start = np.array(po)
-    ndim = len(start)
-    pos = [start + 1e-4*np.random.randn(ndim) for i in range(nwalkers)]
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob,
-                                    args=(x1,x2,x1err,x2err))
+    start = np.array(start)
+    ndim = start.size
+    pos = np.random.normal(start, starting_width*start, (nwalkers,ndim))
+    sampler = emcee.EnsembleSampler(
+        nwalkers, ndim, lnprob, args=(x1,x2,x1err,x2err))
     sampler.run_mcmc(pos, nsteps)
-    samples = np.array([sampler.chain[:,nburn:,i].reshape(-1) \
-                           for i in xrange(ndim)])
+    samples = np.array(
+        [sampler.chain[:,nburn:,i].reshape(-1) for i in xrange(ndim)])
+    # do I need this? I don't think so because I always take log10's
     if logify:
         samples[2] *= np.log(10)
     if output == 'full':
