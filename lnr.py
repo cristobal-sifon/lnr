@@ -477,17 +477,16 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
         # Student's t for slope
         lnp_b = np.log(stats.t.pdf(b, 1))
         # Jeffrey's prior for scatter (not normalized)
-        ln_s = -s
+        lnp_s = -s
         # total
         return lnp_a + lnp_b + lnp_s
     def lnprob(theta, x, y, xerr, yerr):
         """Posterior"""
-        lp = lnprior(theta)
-        return lp + lnlike(theta, x, y, xerr, yerr)
+        return lnprior(theta) + lnlike(theta, x, y, xerr, yerr)
 
     if logify:
-        x1, x1errr = to_log(x1, x1err)
-        x2, x1errr = to_log(x2, x2err)
+        x1, x1err = to_log(x1, x1err)
+        x2, x2err = to_log(x2, x2err)
     start = np.array(start)
     ndim = start.size
     pos = np.random.normal(start, starting_width*start, (nwalkers,ndim))
@@ -514,7 +513,7 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
     return
 
 
-def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
+def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, start=(1.,1.,0.1),
         bootstrap=1000, logify=True, **kwargs):
     """
     Maximum Likelihood Estimation of best-fit parameters
@@ -532,7 +531,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
                   IMPLEMENTED)
       s_int     : boolean (default True)
                   whether to include intrinsic scatter in the MLE.
-      po        : tuple of floats
+      start     : tuple of floats
                   initial guess for free parameters. If `s_int` is
                   True, then po must have 3 elements; otherwise it can
                   have two (for the zero point and the slope; any other
@@ -568,8 +567,8 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
     if len(x2err) == 0:
         x2err = 1e-8 * np.absolute(x2.min()) * np.ones(n)
     if logify:
-        x1, x1errr = to_log(x1, x1err)
-        x2, x1errr = to_log(x2, x2err)
+        x1, x1err = to_log(x1, x1err)
+        x2, x2err = to_log(x2, x2err)
 
     log = np.log
     fmin = optimize.fmin
@@ -586,14 +585,14 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, po=(1.,1.,0.1),
         def _loglike(p, x, y, *args):
             wi = w(p[1], *args)
             return norm + (2*log(wi) + ((y - f(x, *p[:2])) / wi)**2).sum()
-        po = po[:2]
+        start = start[:2]
 
-    fit = fmin(_loglike, po, args=(x1,x2,x1err,x2err), **kwargs)
+    fit = fmin(_loglike, start, args=(x1,x2,x1err,x2err), **kwargs)
     # bootstrap errors?
     if bootstrap is False:
         return fit
     jboot = np.random.randint(0, n, (bootstrap,n))
-    boot = [fmin(_loglike, po, args=(x1[j],x2[j],x1err[j],x2err[j]),
+    boot = [fmin(_loglike, start, args=(x1[j],x2[j],x1err[j],x2err[j]),
                  disp=False, full_output=False)
             for j in jboot]
     out_err = np.std(boot, axis=0)
