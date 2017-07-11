@@ -391,7 +391,7 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
 
 def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
          starting_width=0.01, logify=True,
-         nsteps=5000, nwalkers=100, nburn=500, output='full'):
+         nsteps=5000, nwalkers=100, nburn=0, output='full'):
     """
     Use emcee to find the best-fit linear relation or power law
     accounting for measurement uncertainties and intrinsic scatter.
