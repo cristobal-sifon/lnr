@@ -477,7 +477,7 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
         # Student's t for slope
         lnp_b = np.log(stats.t.pdf(b, 1))
         # Jeffrey's prior for scatter (not normalized)
-        lnp_s = -s
+        lnp_s = -np.log(s)
         # total
         return lnp_a + lnp_b + lnp_s
     def lnprob(theta, x, y, xerr, yerr):
