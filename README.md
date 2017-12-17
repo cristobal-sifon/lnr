@@ -46,7 +46,7 @@ where the `--user` flag is necessary if you do not have root privileges, unless 
 
 After this, just open a python terminal and type
 
-    >>> from lnr import lnr
+    >>> import lnr
 
 and all the modules described above will be available. Then type, e.g.,
 
@@ -57,4 +57,4 @@ to get more details.
 ----
 
 (c) Cristóbal Sifón
-Last modified 2017-05-25
+Last modified 2017-12-17

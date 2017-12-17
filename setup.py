@@ -36,7 +36,7 @@ def read(fname):
 
 setup(
     name='lnr',
-    version='0.1.0',
+    version=find_version('lnr/__init__.py'),
     description='Various linear regression modules',
     long_description=read('README.md'),
     author='Cristobal Sifon',
