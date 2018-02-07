@@ -669,7 +669,6 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     Take log measurements and uncertainties and convert to linear
     values.
 
-    A note about uncertainties. 
 
     Parameters
     ----------
@@ -707,19 +706,18 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
         'The shape of logx and logxerr must be the same'
     assert which in ('lower', 'upper', 'both', 'average'), \
         "Valid values for optional argument `which` are 'lower', 'upper'," \
-        " or 'average'."
+        " 'average' or 'both'."
     x = base**logx
-    if np.any(logxerr):
-        lo = x - base**(logx-logxerr)
-        hi = base**(logx+logxerr) - x
-        if which == 'lower':
-            xerr = lo
-        elif which == 'upper':
-            xerr = hi
-        else:
-            xerr = 0.5 * (lo+hi)
+    lo = x - base**(logx-logxerr)
+    hi = base**(logx+logxerr) - x
+    if which == 'both':
+        return x, lo, hi
+    if which == 'lower':
+        xerr = lo
+    elif which == 'upper':
+        xerr = hi
     else:
-        xerr = np.zeros_like(x)
+        xerr = 0.5 * (lo+hi)
     return x, xerr
 
 
@@ -728,11 +726,55 @@ def to_log(x, xerr=[]):
     Take linear measurements and uncertainties and transform to log
     values.
 
+
+    Parameters
+    ----------
+    x : array of floats
+        measurements of which to take logarithms
+
+    Optional Parameters
+    -------------------
+    xerr : array of floats
+        uncertainties on x
+    base : float
+        base with which the logarithms should be calculated. FOR NOW USE
+        ONLY 10.
+    which : {'lower', 'upper', 'both', 'average'}
+        Which uncertainty to report; note that when converting to/from
+        linear and logarithmic spaces, errorbar symmetry is not
+        preserved. The following are the available options:
+
+            if which=='lower': logxerr = logx - log(x-xerr)
+            if which=='upper': logxerr = log(x+xerr) - logx
+
+        If `which=='both'` then both values are returned, and if
+        `which=='average'`, then the average of the two is returned.
+        Default is 'average'.
+
+    Returns
+    -------
+    logx : array of floats
+        values in log space, i.e., base**logx
+    logxerr : array of floats
+        log-uncertainties, as discussed above
     """
-    logx = np.log10(np.array(x))
-    if np.any(xerr):
-        xerr = np.log10(np.array(x)+np.array(xerr)) - logx
-    else:
+    if len(xerr) == 0:
         xerr = np.zeros_like(x)
-    return logx, xerr
+    assert xerr.shape == x.shape, \
+        'The shape of x and xerr must be the same'
+    assert which in ('lower', 'upper', 'both', 'average'), \
+        "Valid values for optional argument `which` are 'lower', 'upper'," \
+        " 'average' or 'both'."
+    logx = np.log10(x)
+    logxlo = logx - np.log10(x-xerr)
+    logxhi = np.log10(x+xerr) - logx
+    if which == 'both':
+        return logx, loglo, logxhi
+    if which == 'lower':
+        logxerr = logxlo
+    elif which == 'upper':
+        logxerr = logxhi
+    else:
+        logxerr = 0.5 * (logxlo+logxhi)
+    return logx, logxerr
 
