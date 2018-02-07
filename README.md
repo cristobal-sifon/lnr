@@ -48,7 +48,7 @@ Clone this package with
 
     python setup.py install [--user]
 
-where the `--user` flag is necessary if you do not have root privileges, unless your Python distribution was installed through Anaconda.
+where the `--user` flag is recommended so that the installation takes place in the home directory and does not require root privileges.
 
 After this, just open a python terminal and type
 
