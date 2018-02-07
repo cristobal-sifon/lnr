@@ -463,9 +463,10 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
                (((y-model) / sigma)**2).sum() + \
                np.log(x.size) * (2*np.pi)**0.5 / 2
         return -lglk
+
     def lnprior(theta):
         """
-        Prior. Scatter must be positive; using a Student's t
+        Log-priors. Scatter must be positive; using a Student's t
         distribution with 1 dof for the slope.
         """
         a, b, s = theta
@@ -477,11 +478,10 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
         # Student's t for slope
         lnp_b = np.log(stats.t.pdf(b, 1))
         # Jeffrey's prior for scatter (not normalized)
-        lnp_s = -s
-        # flat prior on scatter
-        lnp_s = 0
+        lnp_s = -np.log(s)
         # total
         return lnp_a + lnp_b + lnp_s
+
     def lnprob(theta, x, y, xerr, yerr):
         """Posterior"""
         return lnprior(theta) + lnlike(theta, x, y, xerr, yerr)
