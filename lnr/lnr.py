@@ -664,17 +664,60 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     return s0**0.5
 
 
-def to_linear(logx, logxerr):
+def to_linear(logx, logxerr=[], base=10, which='average'):
     """
     Take log measurements and uncertainties and convert to linear
     values.
 
+    A note about uncertainties. 
+
+    Parameters
+    ----------
+    logx : array of floats
+        logarithm of measurements to be linearized
+
+    Optional Parameters
+    -------------------
+    logxerr : array of floats
+        uncertainties on logx
+    base : float
+        base with which the logarithms have been calculated
+    which : {'lower', 'upper', 'both', 'average'}
+        Which uncertainty to report; note that when converting to/from
+        linear and logarithmic spaces, errorbar symmetry is not
+        preserved. The following are the available options:
+
+            if which=='lower': xerr = logx - base**(logx-logxerr)
+            if which=='upper': xerr = base**(logx+logxerr) - logx
+
+        If `which=='both'` then both values are returned, and if
+        `which=='average'`, then the average of the two is returned.
+        Default is 'average'.
+
+    Returns
+    -------
+    x : array of floats
+        values in linear space, i.e., base**logx
+    xerr : array of floats
+        uncertainties, as discussed above
     """
-    logx = np.array(logx)
-    logxerr = np.array(logxerr)
-    x = 10**logx
+    if len(logxerr) == 0:
+        logxerr = np.zeros_like(logx)
+    assert logx.shape == logxerr.shape, \
+        'The shape of logx and logxerr must be the same'
+    assert which in ('lower', 'upper', 'both', 'average'), \
+        "Valid values for optional argument `which` are 'lower', 'upper'," \
+        " or 'average'."
+    x = base**logx
     if np.any(logxerr):
-        xerr = 10**(logx+logxerr) - x
+        lo = x - base**(logx-logxerr)
+        hi = base**(logx+logxerr) - x
+        if which == 'lower':
+            xerr = lo
+        elif which == 'upper':
+            xerr = hi
+        else:
+            xerr = 0.5 * (lo+hi)
     else:
         xerr = np.zeros_like(x)
     return x, xerr
