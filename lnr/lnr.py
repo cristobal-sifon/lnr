@@ -721,7 +721,7 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     return x, xerr
 
 
-def to_log(x, xerr=[]):
+def to_log(x, xerr=[], base=10, which='average'):
     """
     Take linear measurements and uncertainties and transform to log
     values.
