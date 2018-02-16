@@ -11,6 +11,7 @@ import numpy as np
 import sys
 from matplotlib import pyplot as plt
 from scipy import optimize, stats
+import warning
 
 if sys.version_info[0] == 2:
     from itertools import izip
@@ -321,7 +322,7 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
 
 def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
           miniter=5000, maxiter=1e5, metro=True, silent=True,
-          full_output=False):
+          output='percentiles', full_output=None):
     """
     Python wrapper for the linear regression MCMC of Kelly (2007).
     Requires pidly (http://astronomy.sussex.ac.uk/~anthonys/pidly/) and
@@ -340,18 +341,30 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
       cerr      : array of floats (optional)
                   Covariances of the uncertainties in the dependent and
                   independent variables
-      full_output : bool
-                  whether to return best-fit and 1sigma uncertainties
-                  or the full MCMC chain
+      output    : {'full', 'percentiles', 'std'}
+                  whether to return the full posterior distributions,
+                  the median and lower and upper uncertainties, or the
+                  median and standard deviation. Default 'percentiles'.
+      full_output : bool (optional)
+                  For backward compatibility. `full_output=True` sets
+                  `output='full'` and `full_output=False` sets
+                  `output='std'`. If not specified, this parameter is
+                  ignored. DEPRECATED.
 
     Returns
     -------
-
+      a, b, s   : float arrays
+                  normalization, slope and intrinsic scatter, depending
+                  on the `output` parameter
     """
+    assert output in ('full', 'percentiles', 'std'), \
+        'Invalid value of argument output. See function help for details.'
+
+    # import here so it's not required if any other function is called
     import pidly
+
     n = len(x1)
-    if len(x2) != n:
-        raise ValueError('x1 and x2 must have same length')
+    assert len(x2) == n, 'x1 and x2 must have same length'
     if len(x1err) == 0:
         x1err = np.zeros(n)
     if len(x2err) == 0:
@@ -374,7 +387,7 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     if len(cerr) == n:
         idl('cerr', cerr)
         cmd += ', xycov=cerr'
-    cmd += ', miniter=%d, maxiter=%d' %(miniter, maxiter)
+    cmd += ', miniter={0}, maxiter={1}'.format(miniter, maxiter)
     if metro:
         cmd += ', /metro'
     if silent:
@@ -383,9 +396,22 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
     alpha = idl.ev('fit.alpha')
     beta = idl.ev('fit.beta')
     sigma = np.sqrt(idl.ev('fit.sigsqr'))
-    if full_output:
-        return alpha, beta, sigma
-    out = [(np.median(i), np.std(i)) for i in (alpha, beta, sigma)]
+
+    if full_output is not None:
+        msg = 'argument full_output is deprecated. Please use the argument' \
+              ' output instead.'
+        warnings.warn(msg, DeprecationWarning)
+        output = 'full' if full_output else 'std'
+
+    if output == 'full':
+        output = alpha, beta, sigma
+    elif output == 'percentiles':
+        out = np.array(
+            [[np.median(i), np.percentile(i, 16), np.percentile(i, 84)]
+             for i in (alpha, beta, sigma)])
+    elif output == 'std':
+        out = np.array(
+            [[np.median(i), np.std(i)] for i in (alpha, beta, sigma)])
     return out
 
 
