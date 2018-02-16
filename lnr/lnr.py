@@ -11,7 +11,7 @@ import numpy as np
 import sys
 from matplotlib import pyplot as plt
 from scipy import optimize, stats
-import warning
+import warnings
 
 if sys.version_info[0] == 2:
     from itertools import izip
@@ -409,6 +409,7 @@ def kelly(x1, x2, x1err=[], x2err=[], cerr=[], logify=True,
         out = np.array(
             [[np.median(i), np.percentile(i, 16), np.percentile(i, 84)]
              for i in (alpha, beta, sigma)])
+        out[:,1:] = np.abs(out[:,1:] - out[:,0,np.newaxis])
     elif output == 'std':
         out = np.array(
             [[np.median(i), np.std(i)] for i in (alpha, beta, sigma)])
