@@ -225,14 +225,20 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
 
     # ----  Main routine starts here  ---- #
     # convert to numpy arrays just in case
-    x1, x2, x1err, x2err, cerr = np.array([x1, x2, x1err, x2err, cerr])
+    x1, x2 = np.array([x1, x2])
     npts = len(x1)
-    if x1err.size == 0:
+    if len(x1err) == 0:
         x1err = np.zeros(npts)
-    if x2err.size == 0:
+    else:
+        x1err = np.array(x1err)
+    if len(x2err) == 0:
         x2err = np.zeros(npts)
-    if cerr.size == 0:
+    else:
+        x2err = np.array(x2err)
+    if len(cerr) == 0:
         cerr = np.zeros(npts)
+    else:
+        cerr = np.array(cerr)
     if logify:
         x1, x1errr = to_log(x1, x1err)
         x2, x1errr = to_log(x2, x2err)
