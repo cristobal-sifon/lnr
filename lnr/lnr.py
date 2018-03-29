@@ -225,17 +225,13 @@ def bces(x1, x2, x1err=[], x2err=[], cerr=[], logify=True, model='yx', \
 
     # ----  Main routine starts here  ---- #
     # convert to numpy arrays just in case
-    x1 = np.array(x1)
-    x2 = np.array(x2)
-    x1err = np.array(x1err)
-    x2err = np.array(x2err)
-    cerr = np.array(cerr)
+    x1, x2, x1err, x2err, cerr = np.array([x1, x2, x1err, x2err, cerr])
     npts = len(x1)
-    if len(x1err) == 0:
+    if x1err.size == 0:
         x1err = np.zeros(npts)
-    if len(x2err) == 0:
+    if x2err.size == 0:
         x2err = np.zeros(npts)
-    if len(cerr) == 0:
+    if cerr.size == 0:
         cerr = np.zeros(npts)
     if logify:
         x1, x1errr = to_log(x1, x1err)
@@ -474,12 +470,15 @@ def mcmc(x1, x2, x1err=None, x2err=None, start=(1.,1.,0.5),
     """
     import emcee
     # just in case
-    x1 = np.array(x1)
-    x2 = np.array(x2)
+    x1, x2 = np.array([x1, x2])
     if x1err is None:
-        x1err = np.ones(x1.size)
+        x1err = np.zeros(x1.size)
+    else:
+        x1err = np.array(x1err)
     if x2err is None:
-        x2err = np.ones(x1.size)
+        x2err = np.zeros(x1.size)
+    else:
+        x2err = np.array(x2err)
 
     def lnlike(theta, x, y, xerr, yerr):
         """Likelihood"""
@@ -588,13 +587,18 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, start=(1.,1.,0.1),
                   Maximum Likelihood Estimate of the intrinsic scatter
 
     """
+    x1, x2 = np.array([x1, x2])
     n = x1.size
     if x2.size != n:
         raise ValueError('x1 and x2 must have same length')
     if len(x1err) == 0:
         x1err = 1e-8 * np.absolute(x1.min()) * np.ones(n)
+    else:
+        x1err = np.array(x1err)
     if len(x2err) == 0:
         x2err = 1e-8 * np.absolute(x2.min()) * np.ones(n)
+    else:
+        x2err.array(x2err)
     if logify:
         x1, x1err = to_log(x1, x1err)
         x2, x2err = to_log(x2, x2err)
@@ -681,6 +685,7 @@ def scatter(slope, zero, x1, x2, x1err=[], x2err=[]):
     Used mainly to measure scatter for the BCES best-fit
 
     """
+    x1, x2 = np.array([x1, x2])
     n = len(x1)
     x2pred = zero + slope * x1
     s = sum((x2 - x2pred) ** 2) / (n - 1)
@@ -727,8 +732,11 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     xerr : array of floats
         uncertainties, as discussed above
     """
+    logx = np.array(logx)
     if len(logxerr) == 0:
-        logxerr = np.zeros_like(logx)
+        logxerr = np.zeros(logx.shape)
+    else:
+        logxerr = np.array(logx)
     assert logx.shape == logxerr.shape, \
         'The shape of logx and logxerr must be the same'
     assert which in ('lower', 'upper', 'both', 'average'), \
@@ -785,8 +793,11 @@ def to_log(x, xerr=[], base=10, which='average'):
     logxerr : array of floats
         log-uncertainties, as discussed above
     """
+    x = np.array(x)
     if len(xerr) == 0:
-        xerr = np.zeros_like(x)
+        xerr = np.zeros(x.shape)
+    else:
+        xerr = np.array(xerr)
     assert xerr.shape == x.shape, \
         'The shape of x and xerr must be the same'
     assert which in ('lower', 'upper', 'both', 'average'), \
