@@ -742,7 +742,7 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     if len(logxerr) == 0:
         logxerr = np.zeros(logx.shape)
     else:
-        logxerr = np.array(logx)
+        logxerr = np.array(logxerr)
     assert logx.shape == logxerr.shape, \
         'The shape of logx and logxerr must be the same'
     assert which in ('lower', 'upper', 'both', 'average'), \
@@ -813,7 +813,7 @@ def to_log(x, xerr=[], base=10, which='average'):
     logxlo = logx - np.log10(x-xerr)
     logxhi = np.log10(x+xerr) - logx
     if which == 'both':
-        return logx, loglo, logxhi
+        return logx, logxlo, logxhi
     if which == 'lower':
         logxerr = logxlo
     elif which == 'upper':
