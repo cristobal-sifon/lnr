@@ -738,7 +738,14 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     xerr : array of floats
         uncertainties, as discussed above
     """
+    if np.iterable(logx):
+        return_scalar = False
+    else:
+        return_scalar = True
+        logx = [logx]
     logx = np.array(logx)
+    if not np.iterable(logxerr):
+        logxerr = [logxerr]
     if len(logxerr) == 0:
         logxerr = np.zeros(logx.shape)
     else:
@@ -751,6 +758,10 @@ def to_linear(logx, logxerr=[], base=10, which='average'):
     x = base**logx
     lo = x - base**(logx-logxerr)
     hi = base**(logx+logxerr) - x
+    if return_scalar:
+        x = x[0]
+        lo = lo[0]
+        hi = hi[0]
     if which == 'both':
         return x, lo, hi
     if which == 'lower':
@@ -799,7 +810,14 @@ def to_log(x, xerr=[], base=10, which='average'):
     logxerr : array of floats
         log-uncertainties, as discussed above
     """
+    if np.iterable(x):
+        return_scalar = False
+    else:
+        return_scalar = True
+        x = [x]
     x = np.array(x)
+    if not np.iterable(xerr):
+        xerr = [xerr]
     if len(xerr) == 0:
         xerr = np.zeros(x.shape)
     else:
@@ -812,6 +830,10 @@ def to_log(x, xerr=[], base=10, which='average'):
     logx = np.log10(x)
     logxlo = logx - np.log10(x-xerr)
     logxhi = np.log10(x+xerr) - logx
+    if return_scalar:
+        logx = logx[0]
+        logxlo = logxlo[0]
+        logxhi = logxhi[0]
     if which == 'both':
         return logx, logxlo, logxhi
     if which == 'lower':
