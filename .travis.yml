@@ -4,6 +4,8 @@ python:
     - "3.6"
     - "3.7"
 
+os: osx
+
 install:
     - python setup.py install
 
