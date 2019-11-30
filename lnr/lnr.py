@@ -593,6 +593,7 @@ def mle(x1, x2, x1err=[], x2err=[], cerr=[], s_int=True, start=(1.,1.,0.1),
                   Maximum Likelihood Estimate of the intrinsic scatter
 
     """
+    assert np.iterable(x1) and np.iterable(x2)
     x1, x2 = np.array([x1, x2])
     n = x1.size
     if x2.size != n:

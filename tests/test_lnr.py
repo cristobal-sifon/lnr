@@ -9,6 +9,14 @@ logx = np.log10(x)
 xerr = 193
 
 
+def test_mle():
+    testing.assert_raises(AssertionError, mle, 1, [1])
+    testing.assert_raises(AssertionError, mle, [1], 1)
+    testing.assert_allclose(
+        mle([0,1,2,3], [1.3,1.2,2.1,2.4], logify=False, bootstrap=False),
+        [1.1200563114, 0.4199846599, 0.2049369291])
+
+
 def test_to_linear():
     # no errors
     testing.assert_allclose(to_linear(logx)[0], x)
