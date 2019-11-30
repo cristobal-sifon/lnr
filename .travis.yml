@@ -6,3 +6,6 @@ python:
 
 install:
     - python setup.py install
+
+after_success:
+    - coveralls

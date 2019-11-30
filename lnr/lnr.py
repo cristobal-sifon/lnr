@@ -810,6 +810,8 @@ def to_log(x, xerr=[], base=10, which='average'):
     logxerr : array of floats
         log-uncertainties, as discussed above
     """
+    assert np.issubdtype(type(base), np.floating) \
+        or np.issubdtype(type(base), np.integer) or base == 'e'
     if np.iterable(x):
         return_scalar = False
     else:
@@ -827,9 +829,16 @@ def to_log(x, xerr=[], base=10, which='average'):
     assert which in ('lower', 'upper', 'both', 'average'), \
         "Valid values for optional argument `which` are 'lower', 'upper'," \
         " 'average' or 'both'."
-    logx = np.log10(x)
-    logxlo = logx - np.log10(x-xerr)
-    logxhi = np.log10(x+xerr) - logx
+
+    if base == 10:
+        f = lambda y: np.log10(y)
+    elif base in (np.e, 'e'):
+        f = lambda y: np.log(y)
+    else:
+        f = lambda y: np.log(y) / np.log(base)
+    logx = f(x)
+    logxlo = logx - f(x-xerr)
+    logxhi = f(x+xerr) - logx
     if return_scalar:
         logx = logx[0]
         logxlo = logxlo[0]
