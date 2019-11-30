@@ -10,13 +10,11 @@ xerr = 193
 
 
 def test_mle():
-    testing.assert_raises(AssertionError, mle(1, [1]))
-    testing.assert_raises(AssertionError, mle([1], 1))
-    y = np.array([[1.12005631, 0.3432695],
-                  [0.41998466, 0.2197175],
-                  [0.20493693, 0.09509495]])
+    testing.assert_raises(AssertionError, mle, 1, [1])
+    testing.assert_raises(AssertionError, mle, [1], 1)
     testing.assert_allclose(
-        mle([0,1,2,3], [1.3,1.2,2.1,2.4], logify=False), y)
+        mle([0,1,2,3], [1.3,1.2,2.1,2.4], logify=False, bootstrap=False),
+        [1.1200563114, 0.4199846599, 0.2049369291])
 
 
 def test_to_linear():
