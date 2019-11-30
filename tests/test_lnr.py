@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import testing
 
-from lnr import to_linear, to_log
+from lnr import bces, kelly, mcmc, mle, plot, scatter, to_linear, to_log
 
 
 x = 3847
