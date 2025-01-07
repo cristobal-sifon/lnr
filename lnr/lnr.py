@@ -697,31 +697,41 @@ def mle(
         x1, x1err = to_log(x1, x1err)
         x2, x2err = to_log(x2, x2err)
 
-    # try to allow s_int without slope later
-    if slope is not None:
-        s_int = False
-
     norm = np.log(n * (2 * np.pi) ** 0.5) / 2
     f = lambda x, a, b: a + b * x
-    if slope is not None:
-        print("slope =", slope, start)
+    # weights
+    if s_int:
+        w = lambda b, s, dx, dy: ((b * dx) ** 2 + dy**2 + s**2) ** 0.5
+    else:
         w = lambda b, dx, dy: ((b * dx) ** 2 + dy**2) ** 0.5
+    # here define -loglike depending on parameters
+    if slope is not None:
+        if s_int:
 
-        def _loglike(p, x, y, *args, slope=slope):
-            wi = w(slope, *args)
-            return norm + (2 * np.log(wi) + ((y - f(x, p[0], slope)) / wi) ** 2).sum()
+            def _loglike(p, x, y, *args):
+                wi = w(slope, p[1], *args)
+                return (
+                    norm + (2 * np.log(wi) + ((y - f(x, p[0], slope)) / wi) ** 2).sum()
+                )
 
-        start = start[:1]
+            start = start[:2]
+        else:
+
+            def _loglike(p, x, y, *args):
+                wi = w(slope, *args)
+                return (
+                    norm + (2 * np.log(wi) + ((y - f(x, p[0], slope)) / wi) ** 2).sum()
+                )
+
+            start = start[:1]
 
     elif s_int:
-        w = lambda b, s, dx, dy: ((b * dx) ** 2 + dy**2 + s**2) ** 0.5
 
         def _loglike(p, x, y, *args):
             wi = w(p[1], p[2], *args)
             return norm + (2 * np.log(wi) + ((y - f(x, *p[:2])) / wi) ** 2).sum()
 
     else:
-        w = lambda b, dx, dy: ((b * dx) ** 2 + dy**2) ** 0.5
 
         def _loglike(p, x, y, *args):
             wi = w(p[1], *args)
