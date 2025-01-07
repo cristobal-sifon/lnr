@@ -249,7 +249,7 @@ def bces(
         return a, b, avar, bvar, xi, zeta
 
     def _bootsamples(bootstrap, npts, x, y, xerr, yerr, cerr):
-        b = rdm.randint(npts, size=(bootstrap, npts))
+        b = rdm.integers(npts, size=(bootstrap, npts))
         out = np.transpose([x[b], y[b], xerr[b], yerr[b], cerr[b]], axes=(1, 0, 2))
         return out
 
@@ -618,10 +618,10 @@ def mcmc(
 def mle(
     x1,
     x2,
-    x1err=[],
-    x2err=[],
-    cerr=[],
+    x1err=None,
+    x2err=None,
     s_int=True,
+    slope=None,
     start=(1.0, 1.0, 0.1),
     bootstrap=1000,
     logify=True,
@@ -639,18 +639,20 @@ def mle(
                   measurement uncertainties on independent and
                   dependent variables. Any of the two, or both, can be
                   supplied.
-      cerr      : float array (same size as x1)
-                  covariance on the measurement errors (NOT YET
-                  IMPLEMENTED)
       s_int     : boolean (default True)
-                  whether to include intrinsic scatter in the MLE.
+                  whether to include intrinsic scatter in the MLE. Set to
+                  `False` if slope is provided
+      slope     : float (optional)
+                  value of the slope if only the zero point is being fit.
+                  If provided, only the first of the initial guess values
+                  will be considered.
       start     : tuple of floats
                   initial guess for free parameters. If `s_int` is
                   True, then po must have 3 elements; otherwise it can
-                  have two (for the zero point and the slope; any other
-                  elements will be discarded)
+                  have one (the zero point) or two (for the zero point
+                  and the slope). Additional parameters will be ignored
       bootstrap : int or False
-                  if not False, it is the number of samples with which
+                  if not `False`, it is the number of samples with which
                   to estimate uncertainties on the best-fit parameters
       logify    : boolean (default True)
                   whether to convert the values to log10's. This is to
@@ -679,57 +681,69 @@ def mle(
     n = x1.size
     if x2.size != n:
         raise ValueError("x1 and x2 must have same length")
-    if len(x1err) == 0:
+    if x1err is None:
         x1err = 1e-8 * np.absolute(x1.min()) * np.ones(n)
     else:
         x1err = np.array(x1err)
-    if len(x2err) == 0:
+    if x2err is None:
         x2err = 1e-8 * np.absolute(x2.min()) * np.ones(n)
     else:
-        x2err.array(x2err)
+        x2err = np.array(x2err)
+    if x1err.size != n:
+        raise ValueError("x1err must have the same length as x1")
+    if x2err.size != n:
+        raise ValueError("x2err must have the same length as x2")
     if logify:
         x1, x1err = to_log(x1, x1err)
         x2, x2err = to_log(x2, x2err)
 
-    log = np.log
-    fmin = optimize.fmin
+    # try to allow s_int without slope later
+    if slope is not None:
+        s_int = False
 
-    norm = log(n * (2 * np.pi) ** 0.5) / 2
+    norm = np.log(n * (2 * np.pi) ** 0.5) / 2
     f = lambda x, a, b: a + b * x
-    if s_int:
+    if slope is not None:
+        print("slope =", slope, start)
+        w = lambda b, dx, dy: ((b * dx) ** 2 + dy**2) ** 0.5
+
+        def _loglike(p, x, y, *args, slope=slope):
+            wi = w(slope, *args)
+            return norm + (2 * np.log(wi) + ((y - f(x, p[0], slope)) / wi) ** 2).sum()
+
+        start = start[:1]
+
+    elif s_int:
         w = lambda b, s, dx, dy: ((b * dx) ** 2 + dy**2 + s**2) ** 0.5
 
         def _loglike(p, x, y, *args):
             wi = w(p[1], p[2], *args)
-            return norm + (2 * log(wi) + ((y - f(x, *p[:2])) / wi) ** 2).sum()
+            return norm + (2 * np.log(wi) + ((y - f(x, *p[:2])) / wi) ** 2).sum()
 
     else:
         w = lambda b, dx, dy: ((b * dx) ** 2 + dy**2) ** 0.5
 
         def _loglike(p, x, y, *args):
             wi = w(p[1], *args)
-            return norm + (2 * log(wi) + ((y - f(x, *p[:2])) / wi) ** 2).sum()
+            return norm + (2 * np.log(wi) + ((y - f(x, *p[:2])) / wi) ** 2).sum()
 
         start = start[:2]
 
-    fit = fmin(_loglike, start, args=(x1, x2, x1err, x2err), **kwargs)
+    fit = optimize.minimize(_loglike, start, args=(x1, x2, x1err, x2err), **kwargs).x
     # bootstrap errors?
     if bootstrap is False:
         return fit
-    jboot = rdm.randint(0, n, (bootstrap, n))
+    jboot = rdm.integers(0, n, (bootstrap, n))
     boot = [
-        fmin(
+        optimize.minimize(
             _loglike,
             start,
             args=(x1[j], x2[j], x1err[j], x2err[j]),
-            disp=False,
-            full_output=False,
-        )
+        ).x
         for j in jboot
     ]
     out_err = np.std(boot, axis=0)
-    out = np.transpose([fit, out_err])
-    return out
+    return fit, out_err
 
 
 def plot(
